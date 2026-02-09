@@ -1,0 +1,20 @@
+[
+{
+  "directory": "D:/all/wintercode/project/build",
+  "command": "D:\\all\\wintercode\\mingw32-14.2.0\\bin\\c++.exe -DSFML_STATIC -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include -g -o CMakeFiles\\my2048.dir\\src\\main.cpp.obj -c D:\\all\\wintercode\\project\\src\\main.cpp",
+  "file": "D:\\all\\wintercode\\project\\src\\main.cpp",
+  "output": "CMakeFiles\\my2048.dir\\src\\main.cpp.obj"
+},
+{
+  "directory": "D:/all/wintercode/project/build",
+  "command": "D:\\all\\wintercode\\mingw32-14.2.0\\bin\\c++.exe -DSFML_STATIC -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include -g -o CMakeFiles\\my2048.dir\\src\\GUI.cpp.obj -c D:\\all\\wintercode\\project\\src\\GUI.cpp",
+  "file": "D:\\all\\wintercode\\project\\src\\GUI.cpp",
+  "output": "CMakeFiles\\my2048.dir\\src\\GUI.cpp.obj"
+},
+{
+  "directory": "D:/all/wintercode/project/build",
+  "command": "D:\\all\\wintercode\\mingw32-14.2.0\\bin\\c++.exe -DSFML_STATIC -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include -g -o CMakeFiles\\my2048.dir\\src\\Game.cpp.obj -c D:\\all\\wintercode\\project\\src\\Game.cpp",
+  "file": "D:\\all\\wintercode\\project\\src\\Game.cpp",
+  "output": "CMakeFiles\\my2048.dir\\src\\Game.cpp.obj"
+}
+]

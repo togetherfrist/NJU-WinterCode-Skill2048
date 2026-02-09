@@ -1,0 +1,3 @@
+D:/all/wintercode/project/build/CMakeFiles/my2048.dir
+D:/all/wintercode/project/build/CMakeFiles/edit_cache.dir
+D:/all/wintercode/project/build/CMakeFiles/rebuild_cache.dir
