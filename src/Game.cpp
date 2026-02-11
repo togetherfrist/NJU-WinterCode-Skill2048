@@ -40,7 +40,7 @@ void Game::generateNumber(){
                 if(emptyGridPos == generatePosition){
                     board[r][c].number = generatedNumber;
                     board[r][c].hasnumber = true;
-                    GUI::generateNumber(r, c, generatedNumber);
+                    GUI::putNumberWithEffect(r, c, generatedNumber);
                 }
             }
         }
@@ -56,6 +56,7 @@ void Game::start(){
 }
 
 void Game::move(int dr, int dc){
+    GUI::updateEffects();
     int h = board.size();
     int w = board[0].size();
     int r0 = 0, c0 = 0;
@@ -67,43 +68,54 @@ void Game::move(int dr, int dc){
     int ndc = 1 - ndr;
     bool isMoved = false;
     for(int r = r0, c = c0; r != r_end && c != c_end; r += ndr, c += ndc){
-        int er = r + dr, ec = c + dc;
-        auto moveRC = [dr, dc, &er, &ec, &isMoved](int r, int c){
-            int num = board[r][c].number;
-            int r_to = r, c_to = c;
-            bool composed = false;
-            for(int r1 = r + dr, c1 = c + dc; r1 != er || c1 != ec; r1 += dr, c1 += dc){
-                if(!board[r1][c1].used){
-                    break;
-                }
-                if(!board[r1][c1].hasnumber){
-                    r_to = r1, c_to = c1;
-                }else{
-                    if(num == board[r1][c1].number){
-                        r_to = r1, c_to = c1;
-                        composed = true;
+        bool hasLast = false;
+        int last_r = r, last_c = c;
+        int lastNum = 0;
+        int r_to = r, c_to = c;
+        auto moveRCRC = [&isMoved](int r, int c, int r_to, int c_to, int num, int endNum){
+            GUI::move(r, c, r_to, c_to, num, endNum);
+            board[r][c].hasnumber = false;
+            board[r_to][c_to].hasnumber = true;
+            board[r_to][c_to].number = endNum;
+            isMoved = true;
+        };
+        auto moveLast = [&moveRCRC, &hasLast, &last_r, &last_c, &lastNum, &r_to, &c_to](){
+            if(!hasLast) return;
+            hasLast = false;
+            if(last_r == r_to && last_c == c_to) return;
+            moveRCRC(last_r, last_c, r_to, c_to, lastNum, lastNum);
+        };
+        auto moveRC = [&moveRCRC, &moveLast, &last_r, &last_c, &hasLast, &lastNum, dr, dc, &r_to, &c_to, &isMoved](int r, int c){
+            grid &grd = board[r][c];
+            if(!grd.used){
+                moveLast();
+                r_to = r - dr, c_to = c - dc;
+            }else if(grd.hasnumber){
+                if(hasLast){
+                    if(grd.number == lastNum){
+                        int new_num = lastNum << 1;
+                        if(last_r != r_to || last_c != c_to){
+                            moveRCRC(last_r, last_c, r_to, c_to, lastNum, new_num);
+                        }
+                        moveRCRC(r, c, r_to, c_to, lastNum, new_num);
+                        r_to -= dr, c_to -= dc;
+                        hasLast = false;
+                    }else{
+                        moveLast();
+                        r_to -= dr, c_to -= dc;
+                        last_r = r, last_c = c, lastNum = grd.number;
+                        hasLast = true;
                     }
-                    break;
+                }else{
+                    last_r = r, last_c = c, lastNum = grd.number;
+                    hasLast = true;
                 }
-            }
-            if(r_to != r || c_to != c){
-                isMoved = true;
-                GUI::move(r, c, r_to, c_to);
-                if(composed){
-                    num <<= 1;
-                    er = r_to, ec = c_to;
-                    GUI::generateNumber(r_to, c_to, num);
-                }
-                board[r][c].hasnumber = false;
-                board[r_to][c_to].hasnumber = true;
-                board[r_to][c_to].number = num;
             }
         };
         for(int r1 = r, c1 = c; r1 != r_end && c1 != c_end; r1 -= dr, c1 -= dc){
-            if(board[r1][c1].used && board[r1][c1].hasnumber){
-                moveRC(r1, c1);
-            }
+            moveRC(r1, c1);
         }
+        moveLast();
     }
     if(isMoved){
         generateNumber();

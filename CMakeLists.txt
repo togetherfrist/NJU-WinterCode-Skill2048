@@ -9,15 +9,13 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-add_executable(my2048
-    src/main.cpp
-    src/GUI.cpp
-    src/Game.cpp
-)
+file(GLOB SOURCES "src/*.cpp")
 
-target_link_directories(my2048 PRIVATE "${SFML_PATH}/lib")
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(my2048 PRIVATE
+target_link_directories(${PROJECT_NAME} PRIVATE "${SFML_PATH}/lib")
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
     sfml-graphics-s
     sfml-window-s
     sfml-system-s
@@ -34,4 +32,4 @@ target_link_libraries(my2048 PRIVATE
     ogg
 )
 
-target_compile_definitions(my2048 PRIVATE SFML_STATIC)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SFML_STATIC)

@@ -7,13 +7,17 @@
 #include <string>
 #include <functional>
 
-constexpr int window_w = 1920, window_h = 1080;
 GUI::GUIstate GUI::state = menu;
 sf::Font GUI::font;
+sf::Clock GUI::clock;
 struct GUI::grid{
+    int number;
+    bool hasnumber;
     std::string content;
     bool used;
-    grid(std::string content = "", bool used = true){
+    grid(int number = 0, bool hasnumber = false, std::string content = "", bool used = true){
+        this->number = number;
+        this->hasnumber = hasnumber;
         this->content = content;
         this->used = used;
     }
@@ -59,7 +63,7 @@ sf::Vector2f GUI::getMousePosition(sf::RenderWindow &window){
     return sf::Vector2f({originalX, originalY});
 }
 
-void GUI::addRectangleEdges(sf::Vertex *line, float x_left, float x_right, float y_up, float y_down, sf::Color color){
+void GUI::addRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color){
     line[0].position = sf::Vector2f(x_left, y_up);
     line[1].position = sf::Vector2f(x_right, y_up);
     line[2].position = sf::Vector2f(x_left, y_down);
@@ -71,9 +75,10 @@ void GUI::addRectangleEdges(sf::Vertex *line, float x_left, float x_right, float
     for(int i = 0; i < 8; i++){
         line[i].color = color;
     }
+    line += 8;
 }
 
-void GUI::addRectangleInterior(sf::Vertex *triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color){
+void GUI::addRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color){
     triangle[0].position = sf::Vector2f(x_left, y_up);
     triangle[1].position = sf::Vector2f(x_right, y_up);
     triangle[2].position = sf::Vector2f(x_right, y_down);
@@ -83,6 +88,16 @@ void GUI::addRectangleInterior(sf::Vertex *triangle, float x_left, float x_right
     for(int i = 0; i < 6; i++){
         triangle[i].color = color;
     }
+    triangle += 6;
+}
+
+void GUI::addRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color edgeColor, sf::Color interiorColor){
+    GUI::addRectangleEdges(line, x_left, x_right, y_up, y_down, edgeColor);
+    GUI::addRectangleInterior(triangle, x_left, x_right, y_up, y_down, interiorColor);
+}
+
+int GUI::getTime(){
+    return GUI::clock.getElapsedTime().asMilliseconds();
 }
 
 void GUI::drawButtons(sf::RenderWindow &window){
@@ -93,6 +108,8 @@ void GUI::drawButtons(sf::RenderWindow &window){
     sf::Vector2f mousePosition = getMousePosition(window);
     float mouseX = mousePosition.x;
     float mouseY = mousePosition.y;
+    sf::Vertex *triangleDraw = &triangle[0];
+    sf::Vertex *lineDraw = &line[0];
     for(int i = 0; i < n; i++){
         float x = displayButtons[i].x;
         float y = displayButtons[i].y;
@@ -100,8 +117,7 @@ void GUI::drawButtons(sf::RenderWindow &window){
         float h = displayButtons[i].h;
         auto lineColor = sf::Color::Black;
         auto interiorColor = displayButtons[i].contains(mouseX, mouseY) ? sf::Color(200, 255, 200) : sf::Color::White;
-        addRectangleEdges(&line[8*i], x, x+w, y, y+h, lineColor);
-        addRectangleInterior(&triangle[6*i], x, x+w, y, y+h, interiorColor);
+        addRectangle(lineDraw, triangleDraw, x, x+w, y, y+h, lineColor, interiorColor);
     }
     window.draw(triangle);
     window.draw(line);
@@ -121,6 +137,38 @@ void GUI::click(sf::RenderWindow &window){
     }
 }
 
+float GUI::getGridWidth(){
+    return (window_w - 2*GridsToLeft) / board[0].size();
+}
+
+float GUI::getGridEdgeWidth(){
+    return getGridWidth() / 20;
+}
+
+sf::Vector2f GUI::getGridTopLeft(int r, int c){
+    float grid_w = getGridWidth();
+    float outerXLeft = GridsToLeft + c * grid_w;
+    float outerYUp = GridsToTop + r * grid_w;
+    return sf::Vector2f(outerXLeft, outerYUp);
+}
+
+sf::Color GUI::getNumberColor(int number){
+    constexpr int L = 5, N = 5;
+    int l = std::log2(number);
+    int baseR[N] = {230, 255, 255, 255, 50};
+    int baseG[N] = {230, 255, 50, 50, 50};
+    int baseB[N] = {230, 50, 50, 255, 255};
+    int n = l / L;
+    int r = l % L;
+    float k = float(r) / L;
+    if(n >= N-1) return sf::Color(baseR[N-1], baseG[N-1], baseB[N-1]);
+    return sf::Color(
+        baseR[n] * (1-k) + baseR[n+1] * k,
+        baseG[n] * (1-k) + baseG[n+1] * k,
+        baseB[n] * (1-k) + baseB[n+1] * k
+    );
+}
+
 void GUI::drawBoard(sf::RenderWindow &window){
     if(GUI::state == menu) return;
     int countGrids = 0;
@@ -132,29 +180,31 @@ void GUI::drawBoard(sf::RenderWindow &window){
         }
     }
     sf::VertexArray outer(sf::PrimitiveType::Triangles, countGrids * 6);
+    sf::Vertex* outerDraw = &outer[0];
     sf::VertexArray inner(sf::PrimitiveType::Triangles, countGrids * 6);
+    sf::Vertex* innerDraw = &inner[0];
     int gridindex = 0;
-    constexpr float distanceToLeft = 700;
-    constexpr float distanceToUp = 300;
-    float grid_w = (window_w - 2*distanceToLeft) / board[0].size();
-    float line_w = grid_w / 20;
+    float grid_w = getGridWidth();
+    float line_w = getGridEdgeWidth();
     float inner_w = grid_w - line_w;
     float inner_h = inner_w;
     float outer_w = grid_w + line_w;
     float outer_h = outer_w;
     sf::Color outerColor = sf::Color(130, 180, 255);
-    sf::Color innerColor = sf::Color::White;
+    sf::Color emptyColor = sf::Color::White;
     std::vector<sf::Text> numberTexts(countGrids, sf::Text(font));
     for(int r = 0; r < board.size(); r++){
         for(int c = 0; c < board[r].size(); c++){
             grid grd = board[r][c];
             if(grd.used){
-                float outerXLeft = distanceToLeft + c * grid_w;
-                float outerYUp = distanceToUp + r * grid_w;
-                addRectangleInterior(&outer[6*gridindex], outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
+                sf::Vector2f topLeft = getGridTopLeft(r, c);
+                float outerXLeft = topLeft.x;
+                float outerYUp = topLeft.y;
+                addRectangleInterior(outerDraw, outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
                 float innerXLeft = outerXLeft + line_w;
                 float innerYUp = outerYUp + line_w;
-                addRectangleInterior(&inner[6*gridindex], innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
+                sf::Color innerColor = grd.hasnumber ? getNumberColor(grd.number) : emptyColor;
+                addRectangleInterior(innerDraw, innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
                 numberTexts[gridindex].setString(grd.content);
                 numberTexts[gridindex].setFillColor(sf::Color::Black);
                 fixTextOrigin(numberTexts[gridindex]);
@@ -168,6 +218,37 @@ void GUI::drawBoard(sf::RenderWindow &window){
     for(auto text: numberTexts){
         window.draw(text);
     }
+}
+
+std::vector<std::shared_ptr<GUIEffect>> GUI::effects;
+void GUI::drawEffects(sf::RenderWindow &window){
+    int lineVertexNum = 0;
+    int triangleVertexNum = 0;
+    for(auto &effect : effects){
+        lineVertexNum += effect->lineVertexNum;
+        triangleVertexNum += effect->triangleVertexNum;
+    }
+    sf::VertexArray line(sf::PrimitiveType::Lines, lineVertexNum);
+    sf::Vertex* lineDraw = &line[0];
+    sf::VertexArray triangle(sf::PrimitiveType::Triangles, triangleVertexNum);
+    sf::Vertex* triangleDraw = &triangle[0];
+    for(auto &effect : effects){
+        effect->drawTo(lineDraw, triangleDraw);
+    }
+    window.draw(triangle);
+    window.draw(line);
+    for(auto &effect : effects){
+        effect->drawToWindow(window);
+    }
+    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
+    for(auto &effect : effects){
+        if(effect->shouldRemain()){
+            remainingEffects.push_back(effect);
+        }else{
+            effect->onEnd();
+        }
+    }
+    effects = remainingEffects;
 }
 
 void GUI::openGUI(){
@@ -235,12 +316,13 @@ void GUI::openGUI(){
         window.draw(bg_sprite);
         drawButtons(window);
         drawBoard(window);
+        drawEffects(window);
         window.display();
     }
 }
 
 void GUI::startGame(int basic_n){
-    board = std::vector<std::vector<grid>>(basic_n, std::vector<grid>(basic_n, grid("", true)));
+    board = std::vector<std::vector<grid>>(basic_n, std::vector<grid>(basic_n, grid()));
     state = ingame;
 }
 
@@ -253,7 +335,7 @@ std::string GUI::getBitString(int n){
             s = std::string(lenPerLine, '0') + "\n" + s;
             ++p;
         }
-        s[lenPerLine-1-p] = (n&1) + '0';
+        s[s.size()-1-p] = (n&1) + '0';
         n >>= 1;
         if(n == 0) break;
         ++p;
@@ -261,11 +343,43 @@ std::string GUI::getBitString(int n){
     return s;
 }
 
-void GUI::generateNumber(int row, int col, int number){
+void GUI::putNumberWithEffect(int row, int col, int number){
+    putNumber(row, col, number);
+    float grid_w = getGridWidth();
+    float line_w = getGridEdgeWidth();
+    sf::Vector2f topLeft = getGridTopLeft(row, col);
+    float outer_w = grid_w + line_w;
+    float outer_h = outer_w;
+    float outerXLeft = topLeft.x;
+    float outerYUp = topLeft.y;
+    effects.push_back(std::make_shared<LightEffect>(outerXLeft + outer_w / 2, outerYUp + outer_h / 2, outer_w / 2));
+}
+
+void GUI::putNumber(int row, int col, int number){
+    board[row][col].hasnumber = true;
+    board[row][col].number = number;
     board[row][col].content = getBitString(number);
 }
 
-void GUI::move(int r, int c, int r_to, int c_to){
-    board[r_to][c_to].content = board[r][c].content;
-    board[r][c].content = "";
+void GUI::addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd){
+    board[r][c] = grid();
+    effects.push_back(std::make_shared<MoveEffect>(r, c, r_to, c_to, number, endNumber, onEnd));
+}
+
+void GUI::move(int r, int c, int r_to, int c_to, int number, int endNumber){
+    addMoveEffect(r, c, r_to, c_to, number, endNumber, [r_to, c_to, endNumber](){
+        putNumber(r_to, c_to, endNumber);
+    });
+}
+
+void GUI::updateEffects(){
+    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
+    for(auto effect : effects){
+        if(effect->endOnUpdate()){
+            effect->onEnd();
+        }else{
+            remainingEffects.push_back(effect);
+        }
+    }
+    effects = remainingEffects;
 }

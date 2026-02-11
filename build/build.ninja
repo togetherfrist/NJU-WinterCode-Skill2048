@@ -41,56 +41,64 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = D$:/all/wintercode/project/build/
 # =============================================================================
-# Object build statements for EXECUTABLE target my2048
+# Object build statements for EXECUTABLE target My2048
 
 
 #############################################
-# Order-only phony target for my2048
+# Order-only phony target for My2048
 
-build cmake_object_order_depends_target_my2048: phony || .
+build cmake_object_order_depends_target_My2048: phony || .
 
-build CMakeFiles/my2048.dir/src/main.cpp.obj: CXX_COMPILER__my2048_unscanned_Debug D$:/all/wintercode/project/src/main.cpp || cmake_object_order_depends_target_my2048
+build CMakeFiles/My2048.dir/src/GUI.cpp.obj: CXX_COMPILER__My2048_unscanned_Debug D$:/all/wintercode/project/src/GUI.cpp || cmake_object_order_depends_target_My2048
   DEFINES = -DSFML_STATIC
-  DEP_FILE = CMakeFiles\my2048.dir\src\main.cpp.obj.d
+  DEP_FILE = CMakeFiles\My2048.dir\src\GUI.cpp.obj.d
   FLAGS = -g
   INCLUDES = -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include
-  OBJECT_DIR = CMakeFiles\my2048.dir
-  OBJECT_FILE_DIR = CMakeFiles\my2048.dir\src
+  OBJECT_DIR = CMakeFiles\My2048.dir
+  OBJECT_FILE_DIR = CMakeFiles\My2048.dir\src
 
-build CMakeFiles/my2048.dir/src/GUI.cpp.obj: CXX_COMPILER__my2048_unscanned_Debug D$:/all/wintercode/project/src/GUI.cpp || cmake_object_order_depends_target_my2048
+build CMakeFiles/My2048.dir/src/GUIEffect.cpp.obj: CXX_COMPILER__My2048_unscanned_Debug D$:/all/wintercode/project/src/GUIEffect.cpp || cmake_object_order_depends_target_My2048
   DEFINES = -DSFML_STATIC
-  DEP_FILE = CMakeFiles\my2048.dir\src\GUI.cpp.obj.d
+  DEP_FILE = CMakeFiles\My2048.dir\src\GUIEffect.cpp.obj.d
   FLAGS = -g
   INCLUDES = -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include
-  OBJECT_DIR = CMakeFiles\my2048.dir
-  OBJECT_FILE_DIR = CMakeFiles\my2048.dir\src
+  OBJECT_DIR = CMakeFiles\My2048.dir
+  OBJECT_FILE_DIR = CMakeFiles\My2048.dir\src
 
-build CMakeFiles/my2048.dir/src/Game.cpp.obj: CXX_COMPILER__my2048_unscanned_Debug D$:/all/wintercode/project/src/Game.cpp || cmake_object_order_depends_target_my2048
+build CMakeFiles/My2048.dir/src/Game.cpp.obj: CXX_COMPILER__My2048_unscanned_Debug D$:/all/wintercode/project/src/Game.cpp || cmake_object_order_depends_target_My2048
   DEFINES = -DSFML_STATIC
-  DEP_FILE = CMakeFiles\my2048.dir\src\Game.cpp.obj.d
+  DEP_FILE = CMakeFiles\My2048.dir\src\Game.cpp.obj.d
   FLAGS = -g
   INCLUDES = -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include
-  OBJECT_DIR = CMakeFiles\my2048.dir
-  OBJECT_FILE_DIR = CMakeFiles\my2048.dir\src
+  OBJECT_DIR = CMakeFiles\My2048.dir
+  OBJECT_FILE_DIR = CMakeFiles\My2048.dir\src
+
+build CMakeFiles/My2048.dir/src/main.cpp.obj: CXX_COMPILER__My2048_unscanned_Debug D$:/all/wintercode/project/src/main.cpp || cmake_object_order_depends_target_My2048
+  DEFINES = -DSFML_STATIC
+  DEP_FILE = CMakeFiles\My2048.dir\src\main.cpp.obj.d
+  FLAGS = -g
+  INCLUDES = -ID:/all/wintercode/SFML-3.0.2/include -ID:/all/wintercode/project/include
+  OBJECT_DIR = CMakeFiles\My2048.dir
+  OBJECT_FILE_DIR = CMakeFiles\My2048.dir\src
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target my2048
+# Link build statements for EXECUTABLE target My2048
 
 
 #############################################
-# Link the executable my2048.exe
+# Link the executable My2048.exe
 
-build my2048.exe: CXX_EXECUTABLE_LINKER__my2048_Debug CMakeFiles/my2048.dir/src/main.cpp.obj CMakeFiles/my2048.dir/src/GUI.cpp.obj CMakeFiles/my2048.dir/src/Game.cpp.obj
+build My2048.exe: CXX_EXECUTABLE_LINKER__My2048_Debug CMakeFiles/My2048.dir/src/GUI.cpp.obj CMakeFiles/My2048.dir/src/GUIEffect.cpp.obj CMakeFiles/My2048.dir/src/Game.cpp.obj CMakeFiles/My2048.dir/src/main.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lsfml-graphics-s  -lsfml-window-s  -lsfml-system-s  -lsfml-audio-s  -lopengl32  -lwinmm  -lgdi32  -lfreetype  -lstdc++fs  -lflac  -lvorbisenc  -lvorbisfile  -lvorbis  -logg  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   LINK_PATH = -LD:/all/wintercode/SFML-3.0.2/lib
-  OBJECT_DIR = CMakeFiles\my2048.dir
+  OBJECT_DIR = CMakeFiles\My2048.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_FILE = my2048.exe
-  TARGET_IMPLIB = libmy2048.dll.a
-  TARGET_PDB = my2048.exe.dbg
+  TARGET_FILE = My2048.exe
+  TARGET_IMPLIB = libMy2048.dll.a
+  TARGET_PDB = My2048.exe.dbg
 
 
 #############################################
@@ -118,7 +126,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
-build my2048: phony my2048.exe
+build My2048: phony My2048.exe
 
 # =============================================================================
 # Folder targets.
@@ -128,7 +136,7 @@ build my2048: phony my2048.exe
 #############################################
 # Folder: D:/all/wintercode/project/build
 
-build all: phony my2048.exe
+build all: phony My2048.exe
 
 # =============================================================================
 # Built-in targets
