@@ -29,8 +29,6 @@ public:
 
 class MoveEffect : public GUIEffect{
 private:
-    int startTime;
-    int duration;
     int r, c, r_to, c_to;
     int number, endNumber;
     sf::Text content;
@@ -41,3 +39,4 @@ public:
     bool endOnUpdate() override;
     bool shouldRemain() override;
 };
+
