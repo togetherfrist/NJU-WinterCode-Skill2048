@@ -6,8 +6,10 @@ private:
     struct grid;
     static std::vector<std::vector<grid>> board;
     static std::mt19937 rd;
+    static int score;
     static void generateNumber();
 public:
     static void start();
     static void move(int dr, int dc);
+    static int getScore();
 };

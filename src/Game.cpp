@@ -17,6 +17,7 @@ struct Game::grid{
 
 std::vector<std::vector<Game::grid>> Game::board;
 std::mt19937 Game::rd = std::mt19937(time(0));
+int Game::score = 0;
 
 void Game::generateNumber(){
     int countEmptyGrid = 0;
@@ -40,7 +41,7 @@ void Game::generateNumber(){
                 if(emptyGridPos == generatePosition){
                     board[r][c].number = generatedNumber;
                     board[r][c].hasnumber = true;
-                    GUI::putNumberWithEffect(r, c, generatedNumber);
+                    GUI::generateNumber(r, c, generatedNumber);
                 }
             }
         }
@@ -48,6 +49,7 @@ void Game::generateNumber(){
 }
 
 void Game::start(){
+    score = 0;
     int basic_n = 4;
     board = std::vector<std::vector<grid>>(basic_n, std::vector<grid>(basic_n, grid(0, false, true)));
     GUI::startGame(basic_n);
@@ -94,6 +96,7 @@ void Game::move(int dr, int dc){
                 if(hasLast){
                     if(grd.number == lastNum){
                         int new_num = lastNum << 1;
+                        score += new_num;
                         if(last_r != r_to || last_c != c_to){
                             moveRCRC(last_r, last_c, r_to, c_to, lastNum, new_num);
                         }
@@ -120,4 +123,8 @@ void Game::move(int dr, int dc){
     if(isMoved){
         generateNumber();
     }
+}
+
+int Game::getScore(){
+    return score;
 }

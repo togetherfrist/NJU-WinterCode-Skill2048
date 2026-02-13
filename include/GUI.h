@@ -7,16 +7,18 @@
 #pragma once
 
 class GUI{
+public:
+    enum GUIState{menu, ingame, statesCount};
 private:
     static constexpr int window_w = 1920, window_h = 1080;
-    enum GUIstate{menu, ingame, statesCount};
-    static GUIstate state;
+    static int gameStartTime;
+    static GUIState state;
     static sf::Clock clock;
     struct grid;
     static std::vector<std::vector<grid>> board;
     struct button;
     static std::vector<button> buttons[statesCount];
-    static void addButton(float x, float y, float w, float h, GUIstate displayState, const wchar_t *content, std::function<void()> onclick);
+    static void addButton(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, std::function<void()> onclick);
     static sf::Vector2f getMousePosition(sf::RenderWindow &window);
     static void drawButtons(sf::RenderWindow &window);
     static void click(sf::RenderWindow &window);
@@ -28,6 +30,7 @@ private:
 public:
     static sf::Font font;
     static void fixTextOrigin(sf::Text &text);
+    static GUI::GUIState getState();
     static void openGUI();
     static void addRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color);
     static void addRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color);
@@ -39,6 +42,7 @@ public:
     static sf::Vector2f getGridTopLeft(int r, int c);
     static sf::Color getNumberColor(int number);
     static void startGame(int basic_n);
+    static void generateNumber(int row, int col, int number);
     static void putNumberWithEffect(int row, int col, int number);
     static void putNumber(int row, int col, int number);
     static void move(int r, int c, int r_to, int c_to, int number, int endNumber);

@@ -1,5 +1,6 @@
 #include "GUI.h"
 #include "Game.h"
+#include "GUIDataDisplay.h"
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -7,7 +8,8 @@
 #include <string>
 #include <functional>
 
-GUI::GUIstate GUI::state = menu;
+int GUI::gameStartTime = 0;
+GUI::GUIState GUI::state = menu;
 sf::Font GUI::font;
 sf::Clock GUI::clock;
 struct GUI::grid{
@@ -33,6 +35,10 @@ void GUI::fixTextOrigin(sf::Text &text){
     text.setOrigin({text_x + text_w/2.0f, text_y + text_h/2.0f});
 }
 
+GUI::GUIState GUI::getState(){
+    return state;
+}
+
 struct GUI::button{
     float x, y, w, h;
     sf::Text content;
@@ -51,7 +57,7 @@ struct GUI::button{
 
 std::vector<GUI::button> GUI::buttons[statesCount];
 
-void GUI::addButton(float x, float y, float w, float h, GUIstate displayState, const wchar_t *content, std::function<void()> onclick){
+void GUI::addButton(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, std::function<void()> onclick){
     GUI::buttons[state].push_back(button(x, y, w, h, content, onclick));
 }
 
@@ -241,7 +247,8 @@ void GUI::drawEffects(sf::RenderWindow &window){
         effect->drawToWindow(window);
     }
     std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
-    for(auto &effect : effects){
+    for(int i = 0; i < effects.size(); i++){
+        auto &effect = effects[i];
         if(effect->shouldRemain()){
             remainingEffects.push_back(effect);
         }else{
@@ -265,13 +272,23 @@ void GUI::openGUI(){
     }
 
     sf::Music music("./Resources/Music/04_Nobiri.mp3");
-    music.setVolume(10.0f);
+    music.setVolume(3.0f);
     music.play();
 
     constexpr float button_w = window_w / 5;
     constexpr float button_h = window_h / 10;
     addButton(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", [](){
         Game::start();
+    });
+    GUIDataDisplay::addDisplay(600, 900, 100, 300, ingame, [](){
+        return "Score: " + std::to_string(Game::getScore());
+    });
+    GUIDataDisplay::addDisplay(1000, 1300, 100, 300, ingame, [](){
+        int seconds = (GUI::getTime() - gameStartTime) / 1000;
+        std::stringstream str;
+        str << "Time: " << std::setw(2) << std::setfill('0') << (seconds / 60);
+        str << ":" << std::setw(2) << std::setfill('0') << (seconds % 60);
+        return str.str();
     });
 
     const auto onClose = [&window](const sf::Event::Closed&){
@@ -300,6 +317,9 @@ void GUI::openGUI(){
                 case sf::Keyboard::Scancode::R :
                     Game::start();
                     break;
+                case sf::Keyboard::Scancode::Q :
+                    state = menu;
+                    break;
             }
         }
     };
@@ -317,6 +337,7 @@ void GUI::openGUI(){
         drawButtons(window);
         drawBoard(window);
         drawEffects(window);
+        GUIDataDisplay::displayDatas(window);
         window.display();
     }
 }
@@ -324,6 +345,7 @@ void GUI::openGUI(){
 void GUI::startGame(int basic_n){
     board = std::vector<std::vector<grid>>(basic_n, std::vector<grid>(basic_n, grid()));
     state = ingame;
+    gameStartTime = getTime();
 }
 
 std::string GUI::getBitString(int n){
@@ -341,6 +363,10 @@ std::string GUI::getBitString(int n){
         ++p;
     }
     return s;
+}
+
+void GUI::generateNumber(int row, int col, int number){
+    effects.push_back(std::make_shared<putNumberEffect>(row, col, number));
 }
 
 void GUI::putNumberWithEffect(int row, int col, int number){

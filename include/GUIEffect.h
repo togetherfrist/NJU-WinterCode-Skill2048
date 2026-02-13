@@ -9,11 +9,11 @@ public:
     int startTime, duration;
     int lineVertexNum, triangleVertexNum;
     std::function<void()> onEnd;
+    virtual ~GUIEffect() = default;
     virtual void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) = 0;
     virtual void drawToWindow(sf::RenderWindow &window) = 0;
     virtual bool endOnUpdate() = 0;
-    virtual bool shouldRemain() = 0;
-    virtual ~GUIEffect() = default;
+    bool shouldRemain();
 };
 
 class LightEffect : public GUIEffect{
@@ -24,7 +24,6 @@ public:
     void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) override;
     void drawToWindow(sf::RenderWindow &window) override;
     bool endOnUpdate() override;
-    bool shouldRemain() override;
 };
 
 class MoveEffect : public GUIEffect{
@@ -37,6 +36,15 @@ public:
     void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) override;
     void drawToWindow(sf::RenderWindow &window) override;
     bool endOnUpdate() override;
-    bool shouldRemain() override;
 };
 
+class putNumberEffect : public GUIEffect{
+private:
+    int r, c;
+    int number;
+public:
+    putNumberEffect(int r, int c, int number);
+    void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) override;
+    void drawToWindow(sf::RenderWindow &window) override;
+    bool endOnUpdate() override;
+};

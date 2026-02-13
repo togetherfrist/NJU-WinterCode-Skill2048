@@ -1,6 +1,11 @@
 #include "GUI.h"
 #include "GUIEffect.h"
 #include <SFML/Graphics.hpp>
+#include <iostream>
+
+bool GUIEffect::shouldRemain(){
+    return GUI::getTime() - startTime < duration;
+}
 
 LightEffect::LightEffect(float x, float y, float r){
     this->startTime = GUI::getTime();
@@ -37,17 +42,13 @@ bool LightEffect::endOnUpdate(){
     return false;
 }
 
-bool LightEffect::shouldRemain(){
-    return GUI::getTime() - startTime < duration;
-}
-
 MoveEffect::MoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd):
 r(r), c(c), r_to(r_to), c_to(c_to), number(number), endNumber(endNumber), content(GUI::font){
     this->content.setFillColor(sf::Color::Black);
     this->content.setString(GUI::getBitString(number));
     GUI::fixTextOrigin(this->content);
     this->startTime = GUI::getTime();
-    this->duration = 150;
+    this->duration = 100;
     this->lineVertexNum = 8;
     this->triangleVertexNum = 6;
     this->onEnd = onEnd;
@@ -79,6 +80,27 @@ bool MoveEffect::endOnUpdate(){
     return true;
 }
 
-bool MoveEffect::shouldRemain(){
-    return GUI::getTime() - startTime < duration;
+putNumberEffect::putNumberEffect(int r, int c, int number){
+    this->r = r;
+    this->c = c;
+    this->number = number;
+    this->startTime = GUI::getTime();
+    this->duration = 100;
+    this->lineVertexNum = 0;
+    this->triangleVertexNum = 0;
+    this->onEnd = [r, c, number](){
+        GUI::putNumberWithEffect(r, c, number);
+    };
+}
+
+void putNumberEffect::drawTo(sf::Vertex *&line, sf::Vertex *&triangle){
+    return;
+}
+
+void putNumberEffect::drawToWindow(sf::RenderWindow &window){
+    return;
+}
+
+bool putNumberEffect::endOnUpdate(){
+    return true;
 }
