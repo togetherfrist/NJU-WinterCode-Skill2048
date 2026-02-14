@@ -12,4 +12,6 @@ public:
     static void start();
     static void move(int dr, int dc);
     static int getScore();
+    static void checkEnd();
+    static int getMaxTile();
 };

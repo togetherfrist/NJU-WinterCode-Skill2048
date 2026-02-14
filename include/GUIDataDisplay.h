@@ -8,14 +8,14 @@
 
 class GUIDataDisplay{
 private:
-    float xLeft, xRight, yUp, yDown;
+    float x, y;
     std::function<std::string()> getData;
     sf::Text content;
     GUI::GUIState displayState;
     static std::vector<GUIDataDisplay> datas;
 public:
-    GUIDataDisplay(float xLeft, float xRight, float yUp, float yDown, GUI::GUIState displayState, std::function<std::string()> getData);
+    GUIDataDisplay(float x, float y, GUI::GUIState displayState, std::function<std::string()> getData);
     void display(sf::RenderWindow &window);
-    static void addDisplay(float xLeft, float xRight, float yUp, float yDown, GUI::GUIState displayState, std::function<std::string()> getData);
+    static void addDisplay(float x, float y, GUI::GUIState displayState, std::function<std::string()> getData);
     static void displayDatas(sf::RenderWindow &window);
 };

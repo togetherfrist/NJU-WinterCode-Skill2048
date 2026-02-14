@@ -8,19 +8,21 @@
 
 class GUI{
 public:
-    enum GUIState{menu, ingame, statesCount};
+    enum GUIState{menu, ingame, end, statesCount};
 private:
     static constexpr int window_w = 1920, window_h = 1080;
-    static int gameStartTime;
+    static long long gameStartTime;
+    static long long gameDuration;
+    static int gameMaxTile;
     static GUIState state;
     static sf::Clock clock;
     struct grid;
     static std::vector<std::vector<grid>> board;
-    struct button;
-    static std::vector<button> buttons[statesCount];
-    static void addButton(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, std::function<void()> onclick);
+    struct rectangle;
+    static std::vector<rectangle> rectangles[statesCount];
+    static void addRectangle(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, sf::Color defaultColor, sf::Color hoverColor, std::function<void()> onclick);
     static sf::Vector2f getMousePosition(sf::RenderWindow &window);
-    static void drawButtons(sf::RenderWindow &window);
+    static void drawRectangles(sf::RenderWindow &window);
     static void click(sf::RenderWindow &window);
     static constexpr float GridsToLeft = 700;
     static constexpr float GridsToTop = 300;
@@ -32,10 +34,10 @@ public:
     static void fixTextOrigin(sf::Text &text);
     static GUI::GUIState getState();
     static void openGUI();
-    static void addRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color);
-    static void addRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color);
-    static void addRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color edgeColor, sf::Color interiorColor);
-    static int getTime();
+    static void drawRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color);
+    static void drawRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color);
+    static void drawRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color edgeColor, sf::Color interiorColor);
+    static long long getTime();
     static std::string getBitString(int n);
     static float getGridWidth();
     static float getGridEdgeWidth();
@@ -48,4 +50,5 @@ public:
     static void move(int r, int c, int r_to, int c_to, int number, int endNumber);
     static void updateEffects();
     static void addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd);
+    static void endGame();
 };

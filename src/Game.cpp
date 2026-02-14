@@ -123,8 +123,46 @@ void Game::move(int dr, int dc){
     if(isMoved){
         generateNumber();
     }
+    checkEnd();
 }
 
 int Game::getScore(){
     return score;
 }
+
+void Game::checkEnd(){
+    constexpr int dr[4] = {1, 0, -1, 0};
+    constexpr int dc[4] = {0, 1, 0, -1};
+    int h = board.size(), w = board[0].size();
+    for(int r = 0; r < h; r++){
+        for(int c = 0; c < w; c++){
+            grid grd = board[r][c];
+            if(grd.used){
+                if(!grd.hasnumber) return;
+                for(int k = 0; k < 4; k++){
+                    int r1 = r + dr[k];
+                    int c1 = c + dc[k];
+                    if(r1 < 0 || c1 < 0 || r1 >= h || c1 >= w) continue;
+                    grid g1 = board[r1][c1];
+                    if(g1.used && g1.hasnumber && g1.number == grd.number) return;
+                }
+            }
+        }
+    }
+    GUI::endGame();
+}
+
+int Game::getMaxTile(){
+    int maxTile = 0;
+    for(auto line: board){
+        for(grid grd: line){
+            if(grd.hasnumber){
+                maxTile = std::max(maxTile, grd.number);
+            }
+        }
+    }
+    return maxTile;
+}
+
+
+

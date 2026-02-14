@@ -28,10 +28,10 @@ void LightEffect::drawTo(sf::Vertex* &line, sf::Vertex* &triangle){
     float hup0 = disFromBottom + std::min(t, 0.5f) * 2 * rec_h;
     sf::Color innerColor = sf::Color(255, 201, 14);
     sf::Color outerColor = sf::Color(0, 0, 0);
-    GUI::addRectangle(line, triangle, x-rec_w/2, x+rec_w/2, y-r-hup0, y-r-hdown0, outerColor, innerColor);    
-    GUI::addRectangle(line, triangle, x-rec_w/2, x+rec_w/2, y+r+hdown0, y+r+hup0, outerColor, innerColor);    
-    GUI::addRectangle(line, triangle, x-r-hup0, x-r-hdown0, y+rec_w/2, y-rec_w/2, outerColor, innerColor);
-    GUI::addRectangle(line, triangle, x+r+hdown0, x+r+hup0, y+rec_w/2, y-rec_w/2, outerColor, innerColor);
+    GUI::drawRectangle(line, triangle, x-rec_w/2, x+rec_w/2, y-r-hup0, y-r-hdown0, outerColor, innerColor);    
+    GUI::drawRectangle(line, triangle, x-rec_w/2, x+rec_w/2, y+r+hdown0, y+r+hup0, outerColor, innerColor);    
+    GUI::drawRectangle(line, triangle, x-r-hup0, x-r-hdown0, y+rec_w/2, y-rec_w/2, outerColor, innerColor);
+    GUI::drawRectangle(line, triangle, x+r+hdown0, x+r+hup0, y+rec_w/2, y-rec_w/2, outerColor, innerColor);
 }
 
 void LightEffect::drawToWindow(sf::RenderWindow &window){
@@ -68,7 +68,7 @@ void MoveEffect::drawTo(sf::Vertex *&line, sf::Vertex *&triangle){
     float x = startPos.x + edge_w + x_dis * k;
     float y = startPos.y + edge_w + y_dis * k;
     float inner_w = grid_w - edge_w;
-    GUI::addRectangle(line, triangle, x, x+inner_w, y, y+inner_w, edgeColor, innerColor);
+    GUI::drawRectangle(line, triangle, x, x+inner_w, y, y+inner_w, edgeColor, innerColor);
     this->content.setPosition({x + inner_w / 2, y + inner_w / 2});
 }
 

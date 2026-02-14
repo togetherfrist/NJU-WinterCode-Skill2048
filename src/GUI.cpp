@@ -8,7 +8,9 @@
 #include <string>
 #include <functional>
 
-int GUI::gameStartTime = 0;
+long long GUI::gameStartTime = 0;
+long long GUI::gameDuration = 0;
+int GUI::gameMaxTile = 0;
 GUI::GUIState GUI::state = menu;
 sf::Font GUI::font;
 sf::Clock GUI::clock;
@@ -39,12 +41,14 @@ GUI::GUIState GUI::getState(){
     return state;
 }
 
-struct GUI::button{
+struct GUI::rectangle{
     float x, y, w, h;
     sf::Text content;
+    sf::Color defaultColor;
+    sf::Color hoverColor;
     std::function<void()> onclick;
-    button(float x, float y, float w, float h, const wchar_t *content, std::function<void()> onclick)
-    : x(x), y(y), w(w), h(h), content(GUI::font, content), onclick(onclick) {
+    rectangle(float x, float y, float w, float h, const wchar_t *content, sf::Color defaultColor, sf::Color hoverColor, std::function<void()> onclick)
+    : x(x), y(y), w(w), h(h), content(GUI::font, content), defaultColor(defaultColor), hoverColor(hoverColor), onclick(onclick){
         this->content.setCharacterSize(36.0f);
         this->content.setFillColor(sf::Color::Black);
         fixTextOrigin(this->content);
@@ -55,10 +59,10 @@ struct GUI::button{
     }
 };
 
-std::vector<GUI::button> GUI::buttons[statesCount];
+std::vector<GUI::rectangle> GUI::rectangles[statesCount];
 
-void GUI::addButton(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, std::function<void()> onclick){
-    GUI::buttons[state].push_back(button(x, y, w, h, content, onclick));
+void GUI::addRectangle(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, sf::Color defaultColor, sf::Color hoverColor, std::function<void()> onclick){
+    GUI::rectangles[displayState].push_back(rectangle(x, y, w, h, content, defaultColor, hoverColor, onclick));
 }
 
 sf::Vector2f GUI::getMousePosition(sf::RenderWindow &window){
@@ -69,7 +73,7 @@ sf::Vector2f GUI::getMousePosition(sf::RenderWindow &window){
     return sf::Vector2f({originalX, originalY});
 }
 
-void GUI::addRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color){
+void GUI::drawRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color){
     line[0].position = sf::Vector2f(x_left, y_up);
     line[1].position = sf::Vector2f(x_right, y_up);
     line[2].position = sf::Vector2f(x_left, y_down);
@@ -84,7 +88,7 @@ void GUI::addRectangleEdges(sf::Vertex* &line, float x_left, float x_right, floa
     line += 8;
 }
 
-void GUI::addRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color){
+void GUI::drawRectangleInterior(sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color color){
     triangle[0].position = sf::Vector2f(x_left, y_up);
     triangle[1].position = sf::Vector2f(x_right, y_up);
     triangle[2].position = sf::Vector2f(x_right, y_down);
@@ -97,18 +101,18 @@ void GUI::addRectangleInterior(sf::Vertex* &triangle, float x_left, float x_righ
     triangle += 6;
 }
 
-void GUI::addRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color edgeColor, sf::Color interiorColor){
-    GUI::addRectangleEdges(line, x_left, x_right, y_up, y_down, edgeColor);
-    GUI::addRectangleInterior(triangle, x_left, x_right, y_up, y_down, interiorColor);
+void GUI::drawRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, float x_right, float y_up, float y_down, sf::Color edgeColor, sf::Color interiorColor){
+    GUI::drawRectangleEdges(line, x_left, x_right, y_up, y_down, edgeColor);
+    GUI::drawRectangleInterior(triangle, x_left, x_right, y_up, y_down, interiorColor);
 }
 
-int GUI::getTime(){
+long long GUI::getTime(){
     return GUI::clock.getElapsedTime().asMilliseconds();
 }
 
-void GUI::drawButtons(sf::RenderWindow &window){
-    auto displayButtons = &buttons[GUI::state][0];
-    int n = buttons[GUI::state].size();
+void GUI::drawRectangles(sf::RenderWindow &window){
+    auto displayRectangles = &rectangles[GUI::state][0];
+    int n = rectangles[GUI::state].size();
     sf::VertexArray triangle(sf::PrimitiveType::Triangles, n * 6);
     sf::VertexArray line(sf::PrimitiveType::Lines, n * 8);
     sf::Vector2f mousePosition = getMousePosition(window);
@@ -117,18 +121,19 @@ void GUI::drawButtons(sf::RenderWindow &window){
     sf::Vertex *triangleDraw = &triangle[0];
     sf::Vertex *lineDraw = &line[0];
     for(int i = 0; i < n; i++){
-        float x = displayButtons[i].x;
-        float y = displayButtons[i].y;
-        float w = displayButtons[i].w;
-        float h = displayButtons[i].h;
+        float x = displayRectangles[i].x;
+        float y = displayRectangles[i].y;
+        float w = displayRectangles[i].w;
+        float h = displayRectangles[i].h;
         auto lineColor = sf::Color::Black;
-        auto interiorColor = displayButtons[i].contains(mouseX, mouseY) ? sf::Color(200, 255, 200) : sf::Color::White;
-        addRectangle(lineDraw, triangleDraw, x, x+w, y, y+h, lineColor, interiorColor);
+        auto interiorColor = displayRectangles[i].contains(mouseX, mouseY) ? displayRectangles[i].hoverColor : displayRectangles[i].defaultColor;
+        drawRectangle(lineDraw, triangleDraw, x, x+w, y, y+h, lineColor, interiorColor);
     }
     window.draw(triangle);
     window.draw(line);
     for(int i = 0; i < n; i++){
-        window.draw(displayButtons[i].content);
+        if(displayRectangles[i].content.getString() == "") continue;
+        window.draw(displayRectangles[i].content);
     }
 }
 
@@ -136,9 +141,9 @@ void GUI::click(sf::RenderWindow &window){
     sf::Vector2f mousePosition = getMousePosition(window);
     float x = mousePosition.x;
     float y = mousePosition.y;
-    for(auto button: GUI::buttons[GUI::state]){
-        if(button.contains(x, y)){
-            button.onclick();
+    for(auto rectangle: GUI::rectangles[GUI::state]){
+        if(rectangle.contains(x, y)){
+            rectangle.onclick();
         }
     }
 }
@@ -206,11 +211,11 @@ void GUI::drawBoard(sf::RenderWindow &window){
                 sf::Vector2f topLeft = getGridTopLeft(r, c);
                 float outerXLeft = topLeft.x;
                 float outerYUp = topLeft.y;
-                addRectangleInterior(outerDraw, outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
+                drawRectangleInterior(outerDraw, outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
                 float innerXLeft = outerXLeft + line_w;
                 float innerYUp = outerYUp + line_w;
                 sf::Color innerColor = grd.hasnumber ? getNumberColor(grd.number) : emptyColor;
-                addRectangleInterior(innerDraw, innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
+                drawRectangleInterior(innerDraw, innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
                 numberTexts[gridindex].setString(grd.content);
                 numberTexts[gridindex].setFillColor(sf::Color::Black);
                 fixTextOrigin(numberTexts[gridindex]);
@@ -277,18 +282,35 @@ void GUI::openGUI(){
 
     constexpr float button_w = window_w / 5;
     constexpr float button_h = window_h / 10;
-    addButton(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", [](){
+    addRectangle(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", sf::Color::White, sf::Color::Green, [](){
         Game::start();
     });
-    GUIDataDisplay::addDisplay(600, 900, 100, 300, ingame, [](){
+    addRectangle(0, 0, window_w, window_h, end, L"", sf::Color(0,0,0,50), sf::Color(0,0,0,50), [](){return;});
+    GUIDataDisplay::addDisplay(750, 200, ingame, [](){
         return "Score: " + std::to_string(Game::getScore());
     });
-    GUIDataDisplay::addDisplay(1000, 1300, 100, 300, ingame, [](){
-        int seconds = (GUI::getTime() - gameStartTime) / 1000;
+    GUIDataDisplay::addDisplay(1150, 200, ingame, [](){
+        long long seconds = (GUI::getTime() - gameStartTime) / 1000;
         std::stringstream str;
         str << "Time: " << std::setw(2) << std::setfill('0') << (seconds / 60);
         str << ":" << std::setw(2) << std::setfill('0') << (seconds % 60);
         return str.str();
+    });
+    GUIDataDisplay::addDisplay(960, 200, end, [](){
+        return "Game Over";
+    });
+    GUIDataDisplay::addDisplay(400, 300, end, [](){
+        int seconds = gameDuration / 1000;
+        std::stringstream str;
+        str << "Time: " << std::setw(2) << std::setfill('0') << (seconds / 60);
+        str << ":" << std::setw(2) << std::setfill('0') << (seconds % 60);
+        return str.str();
+    });
+    GUIDataDisplay::addDisplay(400, 500, end, [](){
+        return "Score: " + std::to_string(Game::getScore());
+    });
+    GUIDataDisplay::addDisplay(400, 700, end, [](){
+        return "Max Tile: " + std::to_string(gameMaxTile);
     });
 
     const auto onClose = [&window](const sf::Event::Closed&){
@@ -321,6 +343,15 @@ void GUI::openGUI(){
                     state = menu;
                     break;
             }
+        }else if(state == end){
+            switch(keyPressed.scancode){
+                case sf::Keyboard::Scancode::R:
+                    Game::start();
+                    break;
+                case sf::Keyboard::Scancode::Q :
+                    state = menu;
+                    break;
+            }
         }
     };
 
@@ -334,8 +365,8 @@ void GUI::openGUI(){
         window.handleEvents(onClose, onKeyPressed, onMouseButtonPressed);
         window.clear();
         window.draw(bg_sprite);
-        drawButtons(window);
         drawBoard(window);
+        drawRectangles(window);
         drawEffects(window);
         GUIDataDisplay::displayDatas(window);
         window.display();
@@ -408,4 +439,10 @@ void GUI::updateEffects(){
         }
     }
     effects = remainingEffects;
+}
+
+void GUI::endGame(){
+    state = end;
+    gameDuration = getTime() - gameStartTime;
+    gameMaxTile = Game::getMaxTile();
 }
