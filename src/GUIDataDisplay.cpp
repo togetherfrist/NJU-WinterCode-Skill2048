@@ -5,7 +5,7 @@
 
 std::vector<GUIDataDisplay> GUIDataDisplay::datas;
 
-GUIDataDisplay::GUIDataDisplay(float x, float y, GUI::GUIState displayState, std::function<std::string()> getData):
+GUIDataDisplay::GUIDataDisplay(float x, float y, GUI::GUIState displayState, std::function<std::wstring()> getData):
 x(x), y(y), displayState(displayState), getData(getData), content(GUI::font){
     this->content.setFillColor(sf::Color::Black);
     this->content.setCharacterSize(42);
@@ -19,7 +19,7 @@ void GUIDataDisplay::display(sf::RenderWindow &window){
     window.draw(content);
 }
 
-void GUIDataDisplay::addDisplay(float x, float y, GUI::GUIState displayState, std::function<std::string()> getData){
+void GUIDataDisplay::addDisplay(float x, float y, GUI::GUIState displayState, std::function<std::wstring()> getData){
     datas.push_back(GUIDataDisplay(x, y, displayState, getData));
 }
 

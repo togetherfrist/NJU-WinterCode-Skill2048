@@ -9,8 +9,8 @@ private:
     struct record;
     static std::multiset<record> leaderboard;
     static sf::Text text;
-    static std::string getString();
-    static std::string getTimeString(long long time);
+    static std::wstring getString();
+    static std::wstring getTimeString(long long time);
     static void updateText();
 public:
     static void update(int score, long long time);

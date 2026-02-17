@@ -290,30 +290,36 @@ void GUI::openGUI(){
     });
     addRectangle(0, 0, window_w, window_h, end, L"", sf::Color(0,0,0,50), sf::Color(0,0,0,50), [](){return;});
     GUIDataDisplay::addDisplay(750, 200, ingame, [](){
-        return "Score: " + std::to_string(Game::getScore());
+        std::wstringstream wss;
+        wss << L"分数：" << Game::getScore();
+        return wss.str();
     });
-    GUIDataDisplay::addDisplay(1150, 200, ingame, [](){
+    GUIDataDisplay::addDisplay(1100, 200, ingame, [](){
         long long seconds = (GUI::getTime() - gameStartTime) / 1000;
-        std::stringstream str;
-        str << "Time: " << std::setw(2) << std::setfill('0') << (seconds / 60);
-        str << ":" << std::setw(2) << std::setfill('0') << (seconds % 60);
+        std::wstringstream str;
+        str << L"时长: " << std::setw(2) << std::setfill(L'0') << (seconds / 60);
+        str << L":" << std::setw(2) << std::setfill(L'0') << (seconds % 60);
         return str.str();
     });
     GUIDataDisplay::addDisplay(960, 200, end, [](){
-        return "Game Over";
+        return L"游戏结束";
     });
     GUIDataDisplay::addDisplay(400, 300, end, [](){
         int seconds = gameDuration / 1000;
-        std::stringstream str;
-        str << "Time: " << std::setw(2) << std::setfill('0') << (seconds / 60);
-        str << ":" << std::setw(2) << std::setfill('0') << (seconds % 60);
+        std::wstringstream str;
+        str << L"本局用时: " << std::setw(2) << std::setfill(L'0') << (seconds / 60);
+        str << L":" << std::setw(2) << std::setfill(L'0') << (seconds % 60);
         return str.str();
     });
     GUIDataDisplay::addDisplay(400, 500, end, [](){
-        return "Score: " + std::to_string(Game::getScore());
+        std::wstringstream wss;
+        wss << L"本局得分：" << Game::getScore();
+        return wss.str();
     });
     GUIDataDisplay::addDisplay(400, 700, end, [](){
-        return "Max Tile: " + std::to_string(gameMaxTile);
+        std::wstringstream wss;
+        wss << L"最大方块：" << gameMaxTile;
+        return wss.str();
     });
     addRectangle(400, 900, button_w, button_h, end, L"返回菜单", buttonColor, hoverColor, [](){
         state = menu;

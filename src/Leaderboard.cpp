@@ -22,25 +22,25 @@ struct Leaderboard::record{
 std::multiset<Leaderboard::record> Leaderboard::leaderboard;
 sf::Text Leaderboard::text(GUI::font);
 
-std::string Leaderboard::getString(){
-    std::stringstream stream;
-    stream << std::setw(4) << "rank" << std::setw(10) << "score" << std::setw(11) << "time" << '\n';
+std::wstring Leaderboard::getString(){
+    std::wstringstream stream;
+    stream << std::setw(3) << L"排名" << std::setw(7) << L"得分" << std::setw(9) << L"用时" << L'\n';
     int id = 0;
     for(record rec: leaderboard){
         ++id;
-        stream << std::setw(3) << id << std::setw(11) << rec.score << std::setw(14) << getTimeString(rec.time) << '\n';
+        stream << std::setw(4) << id << std::setw(10) << rec.score << std::setw(14) << getTimeString(rec.time) << '\n';
     }
     return stream.str();
 }
 
-std::string Leaderboard::getTimeString(long long time){
-    std::stringstream stream;
+std::wstring Leaderboard::getTimeString(long long time){
+    std::wstringstream stream;
     int millisecond = time % 1000;
     int second = time / 1000;
     int minute = second / 60;
     second %= 60;
-    stream << std::setw(2) << std::setfill('0') << minute << ":";
-    stream << std::setw(2) << std::setfill('0') << second << ".";
+    stream << std::setw(2) << std::setfill(L'0') << minute << L":";
+    stream << std::setw(2) << std::setfill(L'0') << second << L".";
     stream << millisecond;
     return stream.str();
 }
