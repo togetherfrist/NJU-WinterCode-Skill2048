@@ -1,6 +1,7 @@
 #include "GUI.h"
 #include "Game.h"
 #include "GUIDataDisplay.h"
+#include "Leaderboard.h"
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -269,20 +270,22 @@ void GUI::openGUI(){
     sf::RenderWindow window(sf::VideoMode({window_w, window_h}), "Super 2048");
     window.setKeyRepeatEnabled(false);
 
-    const sf::Texture bg_texture("./Resources/Images/bg_1920x1080.png");
+    const sf::Texture bg_texture("./resources/images/bg_1920x1080.png");
     sf::Sprite bg_sprite(bg_texture);
 
-    if(!font.openFromFile("Resources/Fonts/SourceHanSerifSC-Regular.otf")){
+    if(!font.openFromFile("./resources/fonts/SourceHanSansHWSC-VF.otf")){
         std::cout << "Error while loading font\n";
     }
 
-    sf::Music music("./Resources/Music/04_Nobiri.mp3");
+    sf::Music music("./resources/music/04_Nobiri.mp3");
     music.setVolume(3.0f);
     music.play();
 
-    constexpr float button_w = window_w / 5;
-    constexpr float button_h = window_h / 10;
-    addRectangle(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", sf::Color::White, sf::Color::Green, [](){
+    constexpr float button_w = 400;
+    constexpr float button_h = 120;
+    sf::Color buttonColor = sf::Color::White;
+    sf::Color hoverColor = sf::Color(200, 255, 200);
+    addRectangle(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", buttonColor, hoverColor, [](){
         Game::start();
     });
     addRectangle(0, 0, window_w, window_h, end, L"", sf::Color(0,0,0,50), sf::Color(0,0,0,50), [](){return;});
@@ -312,6 +315,13 @@ void GUI::openGUI(){
     GUIDataDisplay::addDisplay(400, 700, end, [](){
         return "Max Tile: " + std::to_string(gameMaxTile);
     });
+    addRectangle(400, 900, button_w, button_h, end, L"返回菜单", buttonColor, hoverColor, [](){
+        state = menu;
+    });
+    addRectangle(1120, 900, button_w, button_h, end, L"重新开始", buttonColor, hoverColor, [](){
+        Game::start();
+    });
+    Leaderboard::load();
 
     const auto onClose = [&window](const sf::Event::Closed&){
         window.close();
@@ -369,6 +379,7 @@ void GUI::openGUI(){
         drawRectangles(window);
         drawEffects(window);
         GUIDataDisplay::displayDatas(window);
+        Leaderboard::draw(window);
         window.display();
     }
 }
@@ -445,4 +456,6 @@ void GUI::endGame(){
     state = end;
     gameDuration = getTime() - gameStartTime;
     gameMaxTile = Game::getMaxTile();
+    Leaderboard::update(Game::getScore(), gameDuration);
 }
+
