@@ -16,6 +16,7 @@ private:
 public:
     GUIDataDisplay(float x, float y, GUI::GUIState displayState, std::function<std::wstring()> getData);
     void display(sf::RenderWindow &window);
+    static void init();
     static void addDisplay(float x, float y, GUI::GUIState displayState, std::function<std::wstring()> getData);
     static void displayDatas(sf::RenderWindow &window);
 };

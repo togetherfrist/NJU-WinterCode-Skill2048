@@ -1,7 +1,9 @@
 #include "GUI.h"
 #include "Game.h"
+#include "Rectangle.h"
 #include "GUIDataDisplay.h"
 #include "Leaderboard.h"
+#include "Skill.h"
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -40,30 +42,6 @@ void GUI::fixTextOrigin(sf::Text &text){
 
 GUI::GUIState GUI::getState(){
     return state;
-}
-
-struct GUI::rectangle{
-    float x, y, w, h;
-    sf::Text content;
-    sf::Color defaultColor;
-    sf::Color hoverColor;
-    std::function<void()> onclick;
-    rectangle(float x, float y, float w, float h, const wchar_t *content, sf::Color defaultColor, sf::Color hoverColor, std::function<void()> onclick)
-    : x(x), y(y), w(w), h(h), content(GUI::font, content), defaultColor(defaultColor), hoverColor(hoverColor), onclick(onclick){
-        this->content.setCharacterSize(36.0f);
-        this->content.setFillColor(sf::Color::Black);
-        fixTextOrigin(this->content);
-        this->content.setPosition({x + w/2.0f, y + h/2.0f});
-    }
-    bool contains(float posX, float posY){
-        return x <= posX && posX <= x + w && y <= posY && posY <= y + h;
-    }
-};
-
-std::vector<GUI::rectangle> GUI::rectangles[statesCount];
-
-void GUI::addRectangle(float x, float y, float w, float h, GUIState displayState, const wchar_t *content, sf::Color defaultColor, sf::Color hoverColor, std::function<void()> onclick){
-    GUI::rectangles[displayState].push_back(rectangle(x, y, w, h, content, defaultColor, hoverColor, onclick));
 }
 
 sf::Vector2f GUI::getMousePosition(sf::RenderWindow &window){
@@ -109,44 +87,6 @@ void GUI::drawRectangle(sf::Vertex* &line, sf::Vertex* &triangle, float x_left, 
 
 long long GUI::getTime(){
     return GUI::clock.getElapsedTime().asMilliseconds();
-}
-
-void GUI::drawRectangles(sf::RenderWindow &window){
-    auto displayRectangles = &rectangles[GUI::state][0];
-    int n = rectangles[GUI::state].size();
-    sf::VertexArray triangle(sf::PrimitiveType::Triangles, n * 6);
-    sf::VertexArray line(sf::PrimitiveType::Lines, n * 8);
-    sf::Vector2f mousePosition = getMousePosition(window);
-    float mouseX = mousePosition.x;
-    float mouseY = mousePosition.y;
-    sf::Vertex *triangleDraw = &triangle[0];
-    sf::Vertex *lineDraw = &line[0];
-    for(int i = 0; i < n; i++){
-        float x = displayRectangles[i].x;
-        float y = displayRectangles[i].y;
-        float w = displayRectangles[i].w;
-        float h = displayRectangles[i].h;
-        auto lineColor = sf::Color::Black;
-        auto interiorColor = displayRectangles[i].contains(mouseX, mouseY) ? displayRectangles[i].hoverColor : displayRectangles[i].defaultColor;
-        drawRectangle(lineDraw, triangleDraw, x, x+w, y, y+h, lineColor, interiorColor);
-    }
-    window.draw(triangle);
-    window.draw(line);
-    for(int i = 0; i < n; i++){
-        if(displayRectangles[i].content.getString() == "") continue;
-        window.draw(displayRectangles[i].content);
-    }
-}
-
-void GUI::click(sf::RenderWindow &window){
-    sf::Vector2f mousePosition = getMousePosition(window);
-    float x = mousePosition.x;
-    float y = mousePosition.y;
-    for(auto rectangle: GUI::rectangles[GUI::state]){
-        if(rectangle.contains(x, y)){
-            rectangle.onclick();
-        }
-    }
 }
 
 float GUI::getGridWidth(){
@@ -279,55 +219,26 @@ void GUI::openGUI(){
 
     sf::Music music("./resources/music/04_Nobiri.mp3");
     music.setVolume(3.0f);
+    music.setLooping(true);
     music.play();
 
     constexpr float button_w = 400;
     constexpr float button_h = 120;
     sf::Color buttonColor = sf::Color::White;
     sf::Color hoverColor = sf::Color(200, 255, 200);
-    addRectangle(window_w/2-button_w/2, window_h/2, button_w, button_h, menu, L"开始游戏", buttonColor, hoverColor, [](){
+    Rectangle::addButton(menu, window_w/2-button_w/2, window_h/2, button_w, button_h, L"开始游戏", buttonColor, hoverColor, [](){
         Game::start();
     });
-    addRectangle(0, 0, window_w, window_h, end, L"", sf::Color(0,0,0,50), sf::Color(0,0,0,50), [](){return;});
-    GUIDataDisplay::addDisplay(750, 200, ingame, [](){
-        std::wstringstream wss;
-        wss << L"分数：" << Game::getScore();
-        return wss.str();
-    });
-    GUIDataDisplay::addDisplay(1100, 200, ingame, [](){
-        long long seconds = (GUI::getTime() - gameStartTime) / 1000;
-        std::wstringstream str;
-        str << L"时长: " << std::setw(2) << std::setfill(L'0') << (seconds / 60);
-        str << L":" << std::setw(2) << std::setfill(L'0') << (seconds % 60);
-        return str.str();
-    });
-    GUIDataDisplay::addDisplay(960, 200, end, [](){
-        return L"游戏结束";
-    });
-    GUIDataDisplay::addDisplay(400, 300, end, [](){
-        int seconds = gameDuration / 1000;
-        std::wstringstream str;
-        str << L"本局用时: " << std::setw(2) << std::setfill(L'0') << (seconds / 60);
-        str << L":" << std::setw(2) << std::setfill(L'0') << (seconds % 60);
-        return str.str();
-    });
-    GUIDataDisplay::addDisplay(400, 500, end, [](){
-        std::wstringstream wss;
-        wss << L"本局得分：" << Game::getScore();
-        return wss.str();
-    });
-    GUIDataDisplay::addDisplay(400, 700, end, [](){
-        std::wstringstream wss;
-        wss << L"最大方块：" << gameMaxTile;
-        return wss.str();
-    });
-    addRectangle(400, 900, button_w, button_h, end, L"返回菜单", buttonColor, hoverColor, [](){
+    Rectangle::addRectangle(end, 0, 0, window_w, window_h, L"", sf::Color(0,0,0,50));
+    Rectangle::addButton(end, 400, 900, button_w, button_h, L"返回菜单", buttonColor, hoverColor, [](){
         state = menu;
     });
-    addRectangle(1120, 900, button_w, button_h, end, L"重新开始", buttonColor, hoverColor, [](){
+    Rectangle::addButton(end, 1120, 900, button_w, button_h, L"重新开始", buttonColor, hoverColor, [](){
         Game::start();
     });
+    GUIDataDisplay::init();
     Leaderboard::load();
+    Skill::init();
 
     const auto onClose = [&window](const sf::Event::Closed&){
         window.close();
@@ -373,7 +284,7 @@ void GUI::openGUI(){
 
     const auto onMouseButtonPressed = [&window](const sf::Event::MouseButtonPressed mousePressed){
         if(mousePressed.button == sf::Mouse::Button::Left){
-            click(window);
+            Rectangle::click(window);
         }
     };
 
@@ -382,7 +293,7 @@ void GUI::openGUI(){
         window.clear();
         window.draw(bg_sprite);
         drawBoard(window);
-        drawRectangles(window);
+        Rectangle::drawAll(window);
         drawEffects(window);
         GUIDataDisplay::displayDatas(window);
         Leaderboard::draw(window);

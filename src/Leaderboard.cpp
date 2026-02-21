@@ -41,7 +41,7 @@ std::wstring Leaderboard::getTimeString(long long time){
     second %= 60;
     stream << std::setw(2) << std::setfill(L'0') << minute << L":";
     stream << std::setw(2) << std::setfill(L'0') << second << L".";
-    stream << millisecond;
+    stream << std::setw(3) << std::setfill(L'0') << millisecond;
     return stream.str();
 }
 
