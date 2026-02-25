@@ -430,3 +430,7 @@ void GUI::endGame(){
     Leaderboard::update(Game::getScore(), gameDuration);
 }
 
+void GUI::addExplosionEffect(int r, int c){
+    effects.push_back(std::make_shared<explosionEffect>(r, c));
+}
+

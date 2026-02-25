@@ -10,7 +10,6 @@ private:
     static std::mt19937 rd;
     static int score;
     static void generateNumber();
-    static void setGUIBoard();
 public:
     static void start();
     static void move(int dr, int dc);
@@ -19,4 +18,6 @@ public:
     static int getMaxTile();
     static bool isUsed(int r, int c);
     static void addGrid(int r, int c);
+    static void setGrid(int r, int c, int number, bool hasNumber, bool used);
+    static void updateGUIBoard();
 };

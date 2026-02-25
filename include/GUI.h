@@ -54,4 +54,5 @@ public:
     static void updateEffects();
     static void addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd);
     static void endGame();
+    static void addExplosionEffect(int r, int c);
 };

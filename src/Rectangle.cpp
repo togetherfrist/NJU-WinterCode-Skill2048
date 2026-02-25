@@ -1,11 +1,9 @@
 #include "Rectangle.h"
 
-void doNothing(){}
-
 std::vector<Rectangle> Rectangle::rectangles[GUI::statesCount];
 
 Rectangle::Rectangle(float x, float y, float w, float h, std::wstring content, sf::Color color)
-: x(x), y(y), w(w), h(h), content(GUI::font, content), color(color), hoverColor(color), onclick(doNothing) {
+: x(x), y(y), w(w), h(h), content(GUI::font, content), color(color), hoverColor(color), onclick([](){}) {
     this->content.setCharacterSize(36.0f);
     this->content.setFillColor(sf::Color::Black);
     GUI::fixTextOrigin(this->content);

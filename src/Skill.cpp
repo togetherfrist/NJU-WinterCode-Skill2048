@@ -1,6 +1,7 @@
 #include "Skill.h"
 #include "GUI.h"
 #include "Game.h"
+#include "GUIEffect.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -18,7 +19,7 @@ int Skill::usedSkillIndex = -1;
 
 void Skill::init(){
     skills = std::vector<Skill>({        
-        Skill(1400, 300, 3, std::string("./resources/images/addGrid.jpg"), L"添砖加瓦\n选择一个格子的相邻位置，\n添加一个格子", [](){
+        Skill(1400, 300, 3, "./resources/images/addGrid.jpg", L"添砖加瓦\n选择一个格子的相邻位置，\n添加一个格子", [](){
             GUI::selectingGrid = true;
         },
         [](int r, int c){
@@ -36,10 +37,43 @@ void Skill::init(){
         },
         [](int r, int c){
             Game::addGrid(r, c);
+            Game::updateGUIBoard();
             GUI::selectingGrid = false;
-            auto &skill = skills[usedSkillIndex];
-            skill.remainingTimes -= 1;
-            updateSkillText(skill);
+            reduceSkillTimes();
+        }),
+        Skill(1400, 500, 1, "./resources/images/crossExplosion.jpg", L"十字爆炸\n选择一个格子或与格子相邻的位置，\n清除该位置和上下左右位置的数字", [](){
+            GUI::selectingGrid = true;
+        }, [](int r, int c){
+            constexpr int dr[5] = {0, 1, 0, -1, 0};
+            constexpr int dc[5] = {0, 0, 1, 0, -1};
+            for(int k = 0; k < 5; k++){
+                int r1 = r + dr[k];
+                int c1 = c + dc[k];
+                if(Game::isUsed(r1, c1)){
+                    return true;
+                }
+            }
+            return false;
+        }, [](int r, int c){
+            GUI::selectingGrid = false;
+            constexpr int dr[5] = {0, 1, 0, -1, 0};
+            constexpr int dc[5] = {0, 0, 1, 0, -1};
+            for(int k = 0; k < 5; k++){
+                int r1 = r + dr[k];
+                int c1 = c + dc[k];
+                if(Game::isUsed(r1, c1)){
+                    Game::setGrid(r1, c1, 0, false, true);
+                }
+            }
+            Game::updateGUIBoard();
+            for(int k = 0; k < 5; k++){
+                int r1 = r + dr[k];
+                int c1 = c + dc[k];
+                if(Game::isUsed(r1, c1)){
+                    GUI::addExplosionEffect(r1, c1);
+                }
+            }
+            reduceSkillTimes();
         })
     });
     for(auto &skill: skills){
@@ -52,6 +86,12 @@ void Skill::updateSkillText(Skill &skill){
     std::wstringstream stream;
     stream << skill.description << L"\n剩余可使用次数: " << skill.remainingTimes;
     skill.text.setString(stream.str());
+}
+
+void Skill::reduceSkillTimes(){
+    auto &skill = skills[usedSkillIndex];
+    skill.remainingTimes -= 1;
+    updateSkillText(skill);
 }
 
 void Skill::reset(){

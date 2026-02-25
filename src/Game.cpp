@@ -8,10 +8,10 @@
 
 struct Game::grid{
     int number;
-    bool hasnumber, used;
-    grid(int number, bool hasnumber, bool used){
+    bool hasNumber, used;
+    grid(int number, bool hasNumber, bool used){
         this->number = number;
-        this->hasnumber = hasnumber;
+        this->hasNumber = hasNumber;
         this->used = used;
     }
 };
@@ -24,7 +24,7 @@ void Game::generateNumber(){
     int countEmptyGrid = 0;
     for(auto lines: board){
         for(grid grd: lines){
-            if(!grd.hasnumber && grd.used){
+            if(!grd.hasNumber && grd.used){
                 ++countEmptyGrid;
             }
         }
@@ -37,11 +37,11 @@ void Game::generateNumber(){
     for(int r = 0; r < board.size(); r++){
         for(int c = 0; c < board[r].size(); c++){
             grid grd = board[r][c];
-            if(!grd.hasnumber && grd.used){
+            if(!grd.hasNumber && grd.used){
                 ++emptyGridPos;
                 if(emptyGridPos == generatePosition){
                     board[r][c].number = generatedNumber;
-                    board[r][c].hasnumber = true;
+                    board[r][c].hasNumber = true;
                     GUI::generateNumber(r, c, generatedNumber);
                 }
             }
@@ -78,8 +78,8 @@ void Game::move(int dr, int dc){
         int r_to = r, c_to = c;
         auto moveRCRC = [&isMoved](int r, int c, int r_to, int c_to, int num, int endNum){
             GUI::move(r, c, r_to, c_to, num, endNum);
-            board[r][c].hasnumber = false;
-            board[r_to][c_to].hasnumber = true;
+            board[r][c].hasNumber = false;
+            board[r_to][c_to].hasNumber = true;
             board[r_to][c_to].number = endNum;
             isMoved = true;
         };
@@ -94,7 +94,7 @@ void Game::move(int dr, int dc){
             if(!grd.used){
                 moveLast();
                 r_to = r - dr, c_to = c - dc;
-            }else if(grd.hasnumber){
+            }else if(grd.hasNumber){
                 if(hasLast){
                     if(grd.number == lastNum){
                         int new_num = lastNum << 1;
@@ -140,13 +140,13 @@ void Game::checkEnd(){
         for(int c = 0; c < w; c++){
             grid grd = board[r][c];
             if(grd.used){
-                if(!grd.hasnumber) return;
+                if(!grd.hasNumber) return;
                 for(int k = 0; k < 4; k++){
                     int r1 = r + dr[k];
                     int c1 = c + dc[k];
                     if(r1 < 0 || c1 < 0 || r1 >= h || c1 >= w) continue;
                     grid g1 = board[r1][c1];
-                    if(g1.used && g1.hasnumber && g1.number == grd.number) return;
+                    if(g1.used && g1.hasNumber && g1.number == grd.number) return;
                 }
             }
         }
@@ -158,7 +158,7 @@ int Game::getMaxTile(){
     int maxTile = 0;
     for(auto line: board){
         for(grid grd: line){
-            if(grd.hasnumber){
+            if(grd.hasNumber){
                 maxTile = std::max(maxTile, grd.number);
             }
         }
@@ -193,16 +193,19 @@ void Game::addGrid(int r, int c){
         }
     }
     board[r][c].used = true;
-    setGUIBoard();
 }
 
-void Game::setGUIBoard(){
+void Game::setGrid(int r, int c, int number, bool hasNumber, bool used){
+    board[r][c] = grid(number, hasNumber, used);
+}
+
+void Game::updateGUIBoard(){
     GUI::updateEffects();
     GUI::setBoard(board.size(), board[0].size());
     for(int r = 0; r < board.size(); r++){
         for(int c = 0; c < board[0].size(); c++){
             auto &grd = board[r][c];
-            GUI::setGrid(r, c, grd.number, grd.hasnumber, grd.used);
+            GUI::setGrid(r, c, grd.number, grd.hasNumber, grd.used);
         }
     }
 }

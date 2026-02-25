@@ -25,6 +25,7 @@ private:
     static std::vector<Skill> skills;
     static int usedSkillIndex;
     static void updateSkillText(Skill &skill);
+    static void reduceSkillTimes();
 public:
     Skill(float x, float y, int availableTimes, std::string path, std::wstring description, std::function<void()> onclick, std::function<bool(int r, int c)> canSelect, std::function<void(int, int)> onSelectGrid);
     static void init();

@@ -9,7 +9,7 @@ public:
     int startTime, duration;
     int lineVertexNum, triangleVertexNum;
     std::function<void()> onEnd;
-    virtual ~GUIEffect() = default;
+    GUIEffect(int duration, int lineVertexNum, int triangleVertexNum, std::function<void()> onEnd);
     virtual void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) = 0;
     virtual void drawToWindow(sf::RenderWindow &window) = 0;
     virtual bool endOnUpdate() = 0;
@@ -44,6 +44,16 @@ private:
     int number;
 public:
     putNumberEffect(int r, int c, int number);
+    void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) override;
+    void drawToWindow(sf::RenderWindow &window) override;
+    bool endOnUpdate() override;
+};
+
+class explosionEffect : public GUIEffect{
+private:
+    int r, c;
+public:
+    explosionEffect(int r, int c);
     void drawTo(sf::Vertex* &line, sf::Vertex* &triangle) override;
     void drawToWindow(sf::RenderWindow &window) override;
     bool endOnUpdate() override;
