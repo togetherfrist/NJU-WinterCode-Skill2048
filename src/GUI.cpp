@@ -14,19 +14,20 @@
 long long GUI::gameStartTime = 0;
 long long GUI::gameDuration = 0;
 int GUI::gameMaxTile = 0;
+bool GUI::selectingGrid = false;
 GUI::GUIState GUI::state = menu;
 sf::Font GUI::font;
 sf::Clock GUI::clock;
 struct GUI::grid{
     int number;
-    bool hasnumber;
+    bool hasNumber;
     std::string content;
     bool used;
-    grid(int number = 0, bool hasnumber = false, std::string content = "", bool used = true){
+    grid(int number = 0, bool hasNumber = false, bool used = true){
         this->number = number;
-        this->hasnumber = hasnumber;
-        this->content = content;
+        this->hasNumber = hasNumber;
         this->used = used;
+        this->content = hasNumber ? getBitString(number) : "";
     }
 };
 std::vector<std::vector<GUI::grid>> GUI::board;
@@ -44,12 +45,12 @@ GUI::GUIState GUI::getState(){
     return state;
 }
 
-sf::Vector2f GUI::getMousePosition(sf::RenderWindow &window){
+std::pair<float, float> GUI::getMousePosition(sf::RenderWindow &window){
     sf::Vector2u realWindowSize = window.getSize();
     sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
     float originalX = float(mousePosition.x) / realWindowSize.x * window_w;
     float originalY = float(mousePosition.y) / realWindowSize.y * window_h;
-    return sf::Vector2f({originalX, originalY});
+    return {originalX, originalY};
 }
 
 void GUI::drawRectangleEdges(sf::Vertex* &line, float x_left, float x_right, float y_up, float y_down, sf::Color color){
@@ -89,19 +90,27 @@ long long GUI::getTime(){
     return GUI::clock.getElapsedTime().asMilliseconds();
 }
 
+float GUI::getGridWidthHW(int h, int w){
+    float wLimit = (window_w - 2*GridsToLeft) / w;
+    float hLimit = (window_h - GridsToTop - GridsToBottom) / h;
+    return std::min(wLimit, hLimit);
+}
+
 float GUI::getGridWidth(){
-    return (window_w - 2*GridsToLeft) / board[0].size();
+    return getGridWidthHW(board.size(), board[0].size());
 }
 
 float GUI::getGridEdgeWidth(){
     return getGridWidth() / 20;
 }
 
-sf::Vector2f GUI::getGridTopLeft(int r, int c){
+std::pair<float, float> GUI::getGridTopLeft(int r, int c){
     float grid_w = getGridWidth();
-    float outerXLeft = GridsToLeft + c * grid_w;
+    constexpr float midX = window_w / 2;
+    int w = board[0].size();
+    float outerXLeft = midX + (c - float(w) / 2) * grid_w;
     float outerYUp = GridsToTop + r * grid_w;
-    return sf::Vector2f(outerXLeft, outerYUp);
+    return {outerXLeft, outerYUp};
 }
 
 sf::Color GUI::getNumberColor(int number){
@@ -119,6 +128,11 @@ sf::Color GUI::getNumberColor(int number){
         baseG[n] * (1-k) + baseG[n+1] * k,
         baseB[n] * (1-k) + baseB[n+1] * k
     );
+}
+
+int GUI::getChatacterSize(){
+    const static float originalWidth = getGridWidthHW(4, 4);
+    return int(36.0f * getGridWidth() / originalWidth);
 }
 
 void GUI::drawBoard(sf::RenderWindow &window){
@@ -144,18 +158,17 @@ void GUI::drawBoard(sf::RenderWindow &window){
     float outer_h = outer_w;
     sf::Color outerColor = sf::Color(130, 180, 255);
     sf::Color emptyColor = sf::Color::White;
-    std::vector<sf::Text> numberTexts(countGrids, sf::Text(font));
+    int characterSize = getChatacterSize();
+    std::vector<sf::Text> numberTexts(countGrids, sf::Text(font, "", characterSize));
     for(int r = 0; r < board.size(); r++){
         for(int c = 0; c < board[r].size(); c++){
             grid grd = board[r][c];
             if(grd.used){
-                sf::Vector2f topLeft = getGridTopLeft(r, c);
-                float outerXLeft = topLeft.x;
-                float outerYUp = topLeft.y;
+                auto [outerXLeft, outerYUp] = getGridTopLeft(r, c);
                 drawRectangleInterior(outerDraw, outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
                 float innerXLeft = outerXLeft + line_w;
                 float innerYUp = outerYUp + line_w;
-                sf::Color innerColor = grd.hasnumber ? getNumberColor(grd.number) : emptyColor;
+                sf::Color innerColor = grd.hasNumber ? getNumberColor(grd.number) : emptyColor;
                 drawRectangleInterior(innerDraw, innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
                 numberTexts[gridindex].setString(grd.content);
                 numberTexts[gridindex].setFillColor(sf::Color::Black);
@@ -202,6 +215,32 @@ void GUI::drawEffects(sf::RenderWindow &window){
         }
     }
     effects = remainingEffects;
+}
+
+std::pair<int,int> GUI::getSelectedGrid(sf::RenderWindow & window){
+    float gridWidth = getGridWidth();
+    float edgeWidth = getGridEdgeWidth();
+    auto [x0, y0] = getGridTopLeft(0, 0);
+    auto [mouseX, mouseY] = getMousePosition(window);
+    int r = floor((mouseY - y0 + edgeWidth / 2) / gridWidth);
+    int c = floor((mouseX - x0 + edgeWidth / 2) / gridWidth);
+    return {r, c};
+}
+
+void GUI::drawSelecting(sf::RenderWindow &window){
+    if(!selectingGrid) return;
+    float gridWidth = getGridWidth();
+    float edgeWidth = getGridEdgeWidth();
+    auto [r, c] = getSelectedGrid(window);
+    auto [x, y] = getGridTopLeft(r, c);
+    sf::VertexArray rectangles(sf::PrimitiveType::Triangles, 4*6);
+    sf::Vertex* recDraw = &rectangles[0];
+    sf::Color selectingColor = Skill::getSelectingColor(r, c);
+    drawRectangleInterior(recDraw, x, x+gridWidth, y, y+edgeWidth, selectingColor);
+    drawRectangleInterior(recDraw, x+gridWidth, x+gridWidth+edgeWidth, y, y+gridWidth, selectingColor);
+    drawRectangleInterior(recDraw, x+edgeWidth, x+gridWidth+edgeWidth, y+gridWidth, y+gridWidth+edgeWidth, selectingColor);
+    drawRectangleInterior(recDraw, x, x+edgeWidth, y+edgeWidth, y+gridWidth+edgeWidth, selectingColor);
+    window.draw(rectangles);
 }
 
 void GUI::openGUI(){
@@ -284,7 +323,14 @@ void GUI::openGUI(){
 
     const auto onMouseButtonPressed = [&window](const sf::Event::MouseButtonPressed mousePressed){
         if(mousePressed.button == sf::Mouse::Button::Left){
-            Rectangle::click(window);
+            if(selectingGrid){
+                auto [r, c] = getSelectedGrid(window);
+                Skill::selectGrid(r, c);
+            }else{
+                auto [x, y] = getMousePosition(window);
+                Rectangle::click(x, y);
+                Skill::click(x, y);
+            }
         }
     };
 
@@ -293,12 +339,22 @@ void GUI::openGUI(){
         window.clear();
         window.draw(bg_sprite);
         drawBoard(window);
-        Rectangle::drawAll(window);
         drawEffects(window);
         GUIDataDisplay::displayDatas(window);
         Leaderboard::draw(window);
+        Skill::draw(window);
+        Rectangle::draw(window);
+        drawSelecting(window);
         window.display();
     }
+}
+
+void GUI::setBoard(int h, int w){
+    board = std::vector<std::vector<grid>>(h, std::vector<grid>(w, grid(0, false, false)));
+}
+
+void GUI::setGrid(int r, int c, int number, bool hasNumber, bool used){
+    board[r][c] = grid(number, hasNumber, used);
 }
 
 void GUI::startGame(int basic_n){
@@ -332,16 +388,14 @@ void GUI::putNumberWithEffect(int row, int col, int number){
     putNumber(row, col, number);
     float grid_w = getGridWidth();
     float line_w = getGridEdgeWidth();
-    sf::Vector2f topLeft = getGridTopLeft(row, col);
     float outer_w = grid_w + line_w;
     float outer_h = outer_w;
-    float outerXLeft = topLeft.x;
-    float outerYUp = topLeft.y;
+    auto [outerXLeft, outerYUp] = getGridTopLeft(row, col);
     effects.push_back(std::make_shared<LightEffect>(outerXLeft + outer_w / 2, outerYUp + outer_h / 2, outer_w / 2));
 }
 
 void GUI::putNumber(int row, int col, int number){
-    board[row][col].hasnumber = true;
+    board[row][col].hasNumber = true;
     board[row][col].number = number;
     board[row][col].content = getBitString(number);
 }

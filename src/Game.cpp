@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "GUI.h"
+#include "Skill.h"
 #include <vector>
 #include <random>
 #include <functional>
@@ -53,6 +54,7 @@ void Game::start(){
     int basic_n = 4;
     board = std::vector<std::vector<grid>>(basic_n, std::vector<grid>(basic_n, grid(0, false, true)));
     GUI::startGame(basic_n);
+    Skill::reset();
     generateNumber();
     generateNumber();
 }
@@ -164,5 +166,45 @@ int Game::getMaxTile(){
     return maxTile;
 }
 
+bool Game::isUsed(int r, int c){
+    return r >= 0 && r < board.size() && c >= 0 && c < board[0].size() && board[r][c].used;
+}
+
+void Game::addGrid(int r, int c){
+    int r0 = board.size(), c0 = board[0].size();
+    if(r < 0){
+        int d = -r;
+        board.insert(board.begin(), d, std::vector<grid>(c0, grid(0, false, false)));
+        r = 0;
+    }else if(r >= r0){
+        int d = r - r0 + 1;
+        board.insert(board.end(), d, std::vector<grid>(c0, grid(0, false, false)));
+    }
+    if(c < 0){
+        int d = -c;
+        for(auto &line: board){
+            line.insert(line.begin(), d, grid(0, false, false));
+            c = 0;
+        }
+    }else if(c >= c0){
+        int d = c - c0 + 1;
+        for(auto &line: board){
+            line.insert(line.end(), d, grid(0, false, false));
+        }
+    }
+    board[r][c].used = true;
+    setGUIBoard();
+}
+
+void Game::setGUIBoard(){
+    GUI::updateEffects();
+    GUI::setBoard(board.size(), board[0].size());
+    for(int r = 0; r < board.size(); r++){
+        for(int c = 0; c < board[0].size(); c++){
+            auto &grd = board[r][c];
+            GUI::setGrid(r, c, grd.number, grd.hasnumber, grd.used);
+        }
+    }
+}
 
 

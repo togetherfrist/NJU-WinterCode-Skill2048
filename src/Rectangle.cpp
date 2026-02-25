@@ -4,7 +4,7 @@ void doNothing(){}
 
 std::vector<Rectangle> Rectangle::rectangles[GUI::statesCount];
 
-Rectangle::Rectangle(float x, float y, float w, float h, const wchar_t *content, sf::Color color)
+Rectangle::Rectangle(float x, float y, float w, float h, std::wstring content, sf::Color color)
 : x(x), y(y), w(w), h(h), content(GUI::font, content), color(color), hoverColor(color), onclick(doNothing) {
     this->content.setCharacterSize(36.0f);
     this->content.setFillColor(sf::Color::Black);
@@ -16,14 +16,13 @@ bool Rectangle::contains(float posX, float posY){
     return x <= posX && posX <= x + w && y <= posY && posY <= y + h;
 }
 
-void Rectangle::drawAll(sf::RenderWindow &window){
+void Rectangle::draw(sf::RenderWindow &window){
     auto displayRectangles = &rectangles[GUI::getState()][0];
     int n = rectangles[GUI::getState()].size();
     sf::VertexArray triangle(sf::PrimitiveType::Triangles, n * 6);
     sf::VertexArray line(sf::PrimitiveType::Lines, n * 8);
-    sf::Vector2f mousePosition = GUI::getMousePosition(window);
-    float mouseX = mousePosition.x;
-    float mouseY = mousePosition.y;
+    std::pair<float, float> mousePosition = GUI::getMousePosition(window);
+    auto [mouseX, mouseY] = mousePosition;
     sf::Vertex *triangleDraw = &triangle[0];
     sf::Vertex *lineDraw = &line[0];
     for(int i = 0; i < n; i++){
@@ -43,11 +42,8 @@ void Rectangle::drawAll(sf::RenderWindow &window){
     }
 }
 
-void Rectangle::click(sf::RenderWindow &window){
-    sf::Vector2f mousePosition = GUI::getMousePosition(window);
-    float x = mousePosition.x;
-    float y = mousePosition.y;
-    for(auto rectangle: rectangles[GUI::getState()]){
+void Rectangle::click(float x, float y){
+    for(auto &rectangle: rectangles[GUI::getState()]){
         if(rectangle.contains(x, y)){
             rectangle.onclick();
         }
@@ -62,7 +58,7 @@ void Rectangle::addButton(GUI::GUIState state, float x, float y, float w, float 
     rectangles[state].push_back(Button(x, y, w, h, content, color, hoverColor, onclick));
 }
 
-Button::Button(float x, float y, float w, float h, const wchar_t *content, sf::Color color, sf::Color hoverColor, std::function<void()> onclick)
+Button::Button(float x, float y, float w, float h, std::wstring content, sf::Color color, sf::Color hoverColor, std::function<void()> onclick)
 : Rectangle(x, y, w, h, content, color){
     this->hoverColor = hoverColor;
     this->onclick = onclick;

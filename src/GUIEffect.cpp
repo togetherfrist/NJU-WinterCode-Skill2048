@@ -46,6 +46,7 @@ MoveEffect::MoveEffect(int r, int c, int r_to, int c_to, int number, int endNumb
 r(r), c(c), r_to(r_to), c_to(c_to), number(number), endNumber(endNumber), content(GUI::font){
     this->content.setFillColor(sf::Color::Black);
     this->content.setString(GUI::getBitString(number));
+    this->content.setCharacterSize(GUI::getChatacterSize());
     GUI::fixTextOrigin(this->content);
     this->startTime = GUI::getTime();
     this->duration = 100;
@@ -57,16 +58,16 @@ r(r), c(c), r_to(r_to), c_to(c_to), number(number), endNumber(endNumber), conten
 void MoveEffect::drawTo(sf::Vertex *&line, sf::Vertex *&triangle){
     sf::Color innerColor = GUI::getNumberColor(number);
     sf::Color edgeColor = sf::Color::Black;
-    sf::Vector2f startPos = GUI::getGridTopLeft(r, c);
-    sf::Vector2f endPos = GUI::getGridTopLeft(r_to, c_to);
-    float x_dis = endPos.x - startPos.x;
-    float y_dis = endPos.y - startPos.y;
+    auto [startX, startY] = GUI::getGridTopLeft(r, c);
+    auto [endX, endY] = GUI::getGridTopLeft(r_to, c_to);
+    float x_dis = endX - startX;
+    float y_dis = endY - startY;
     int t = GUI::getTime() - startTime;
     float k = (float)t / duration;
     float grid_w = GUI::getGridWidth();
     float edge_w = GUI::getGridEdgeWidth();
-    float x = startPos.x + edge_w + x_dis * k;
-    float y = startPos.y + edge_w + y_dis * k;
+    float x = startX + edge_w + x_dis * k;
+    float y = startY + edge_w + y_dis * k;
     float inner_w = grid_w - edge_w;
     GUI::drawRectangle(line, triangle, x, x+inner_w, y, y+inner_w, edgeColor, innerColor);
     this->content.setPosition({x + inner_w / 2, y + inner_w / 2});
