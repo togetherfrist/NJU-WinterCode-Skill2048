@@ -58,7 +58,7 @@ public:
 
 class VolumeBar{   
 private: 
-    static constexpr float MaxBGMVolume = 30.0f;
+    static constexpr float MaxBGMVolume = 50.0f;
     static constexpr float VolumeBarX = 1700, VolumeBarY = 960, VolumeBarW = 150, VolumeBarH = 28;
     static bool controllingVolume;
     static bool contains(float x, float y);
