@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(My2048 CXX)
+project(Skill2048 CXX)
 
 set(SFML_PATH "D:/all/wintercode/SFML-3.0.2")
 
