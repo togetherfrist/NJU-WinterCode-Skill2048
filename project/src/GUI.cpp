@@ -38,18 +38,18 @@ sf::Music GUI::bgm;
 void GUI::openGUI(){
     GUI::state = menu;
 
-    sf::RenderWindow window(sf::VideoMode({window_w, window_h}), "Super 2048");
+    sf::RenderWindow window(sf::VideoMode({window_w, window_h}), "Skill 2048");
     window.setKeyRepeatEnabled(false);
-
     const sf::Texture bg_texture(projectPath + "/resources/images/bg_1920x1080.png");
     sf::Sprite bg_sprite(bg_texture);
-
     if(!bgm.openFromFile(projectPath + "/resources/music/bgm2048.mp3")){
         std::cout << "Error while loading bgm\n";
     }
     bgm.setVolume(VolumeBar::bgmVolume);
     bgm.setLooping(true);
     bgm.play();
+    sf::Image icon(projectPath + "/resources//images/icon.jpg");
+    window.setIcon(icon);
 
     constexpr float button_w = 400;
     constexpr float button_h = 120;
