@@ -233,12 +233,12 @@ std::pair<float, float> GUI::getGridTopLeft(int r, int c){
     return {outerXLeft, outerYUp};
 }
 
-sf::Color GUI::getNumberColor(int number){
+sf::Color GUI::getGridColor(int number){
     constexpr int L = 5, N = 5;
     int l = std::log2(number);
-    int baseR[N] = {230, 255, 255, 255, 50};
-    int baseG[N] = {230, 255, 50, 50, 50};
-    int baseB[N] = {230, 50, 50, 255, 255};
+    int baseR[N] = {230, 255, 255, 150, 150};
+    int baseG[N] = {230, 255, 150, 150, 255};
+    int baseB[N] = {230, 50, 150, 255, 150};
     int n = l / L;
     int r = l % L;
     float k = float(r) / L;
@@ -288,7 +288,7 @@ void GUI::drawBoard(sf::RenderWindow &window){
                 drawRectangleInterior(outerDraw, outerXLeft, outerXLeft + outer_w, outerYUp, outerYUp + outer_h, outerColor);
                 float innerXLeft = outerXLeft + line_w;
                 float innerYUp = outerYUp + line_w;
-                sf::Color innerColor = grd.hasNumber ? getNumberColor(grd.number) : emptyColor;
+                sf::Color innerColor = grd.hasNumber ? getGridColor(grd.number) : emptyColor;
                 drawRectangleInterior(innerDraw, innerXLeft, innerXLeft + inner_w, innerYUp, innerYUp + inner_h, innerColor);
                 numberTexts[gridindex].setString(grd.content);
                 numberTexts[gridindex].setFillColor(sf::Color::Black);

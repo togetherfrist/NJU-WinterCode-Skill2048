@@ -99,7 +99,7 @@ MoveEffect::MoveEffect(int r, int c, int r_to, int c_to, int number, int endNumb
 }
 
 void MoveEffect::drawTo(sf::Vertex *&line, sf::Vertex *&triangle){
-    sf::Color innerColor = GUI::getNumberColor(number);
+    sf::Color innerColor = GUI::getGridColor(number);
     sf::Color edgeColor = sf::Color::Black;
     auto [startX, startY] = GUI::getGridTopLeft(r, c);
     auto [endX, endY] = GUI::getGridTopLeft(r_to, c_to);

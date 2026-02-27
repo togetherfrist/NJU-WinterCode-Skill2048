@@ -43,7 +43,7 @@ public:
     static float getGridWidth();
     static float getGridEdgeWidth();
     static std::pair<float, float> getGridTopLeft(int r, int c);
-    static sf::Color getNumberColor(int number);
+    static sf::Color getGridColor(int number);
     static int getChatacterSize();
     static void setBoard(int h, int w);
     static void setGrid(int r, int c, int number, bool hasNumber, bool used);
