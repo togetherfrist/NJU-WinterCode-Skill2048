@@ -68,7 +68,7 @@ void Skill::init(){
             for(int k = 0; k < 5; k++){
                 int r1 = r + dr[k], c1 = c + dc[k];
                 if(Game::isUsed(r1, c1)){
-                    GUI::addExplosionEffect(r1, c1);
+                    GUIEffect::addEffect(std::make_shared<explosionEffect>(r1, c1));
                 }
             }
             reduceSkillTimes();

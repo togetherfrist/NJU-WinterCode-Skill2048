@@ -3,6 +3,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+std::vector<std::shared_ptr<GUIEffect>> GUIEffect::effects;
+
 GUIEffect::GUIEffect(int duration, int lineVertexNum, int triangleVertexNum, std::function<void()> onEnd):
 startTime(GUI::getTime()), duration(duration), lineVertexNum(lineVertexNum), triangleVertexNum(triangleVertexNum), onEnd(onEnd) {
     return;
@@ -10,6 +12,53 @@ startTime(GUI::getTime()), duration(duration), lineVertexNum(lineVertexNum), tri
 
 bool GUIEffect::shouldRemain(){
     return GUI::getTime() - startTime < duration;
+}
+
+void GUIEffect::draw(sf::RenderWindow &window){
+    int lineVertexNum = 0;
+    int triangleVertexNum = 0;
+    for(auto &effect : effects){
+        lineVertexNum += effect->lineVertexNum;
+        triangleVertexNum += effect->triangleVertexNum;
+    }
+    sf::VertexArray line(sf::PrimitiveType::Lines, lineVertexNum);
+    sf::Vertex* lineDraw = &line[0];
+    sf::VertexArray triangle(sf::PrimitiveType::Triangles, triangleVertexNum);
+    sf::Vertex* triangleDraw = &triangle[0];
+    for(auto &effect : effects){
+        effect->drawTo(lineDraw, triangleDraw);
+    }
+    window.draw(triangle);
+    window.draw(line);
+    for(auto &effect : effects){
+        effect->drawToWindow(window);
+    }
+    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
+    for(int i = 0; i < effects.size(); i++){
+        auto &effect = effects[i];
+        if(effect->shouldRemain()){
+            remainingEffects.push_back(effect);
+        }else{
+            effect->onEnd();
+        }
+    }
+    effects = remainingEffects;
+}
+
+void GUIEffect::addEffect(std::shared_ptr<GUIEffect> effect){
+    effects.push_back(effect);
+}
+
+void GUIEffect::updateEffects(){
+    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
+    for(auto effect : effects){
+        if(effect->endOnUpdate()){
+            effect->onEnd();
+        }else{
+            remainingEffects.push_back(effect);
+        }
+    }
+    effects = remainingEffects;
 }
 
 LightEffect::LightEffect(float x, float y, float r)

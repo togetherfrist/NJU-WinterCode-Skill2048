@@ -20,10 +20,8 @@ private:
     static constexpr float GridsToLeft = 600;
     static constexpr float GridsToTop = 300;
     static constexpr float GridsToBottom = 200;
-    static std::vector<std::shared_ptr<GUIEffect>> effects;
     static sf::Music bgm;
     static void drawBoard(sf::RenderWindow &window);
-    static void drawEffects(sf::RenderWindow &window);
     static std::pair<int,int> getSelectedGrid(sf::RenderWindow &window);
     static void drawSelecting(sf::RenderWindow &window);
     static float getGridWidthHW(int h, int w);
@@ -54,10 +52,7 @@ public:
     static void putNumberWithEffect(int row, int col, int number);
     static void putNumber(int row, int col, int number);
     static void move(int r, int c, int r_to, int c_to, int number, int endNumber);
-    static void updateEffects();
-    static void addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd);
     static void endGame();
-    static void addExplosionEffect(int r, int c);
     static void setVolume(float volume);
 };
 

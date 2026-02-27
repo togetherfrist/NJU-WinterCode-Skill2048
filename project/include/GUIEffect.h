@@ -5,6 +5,8 @@
 #pragma once
 
 class GUIEffect{
+private:
+    static std::vector<std::shared_ptr<GUIEffect>> effects;
 public:
     int startTime, duration;
     int lineVertexNum, triangleVertexNum;
@@ -14,6 +16,9 @@ public:
     virtual void drawToWindow(sf::RenderWindow &window) = 0;
     virtual bool endOnUpdate() = 0;
     bool shouldRemain();
+    static void draw(sf::RenderWindow &window);
+    static void addEffect(std::shared_ptr<GUIEffect> effect);
+    static void updateEffects();
 };
 
 class LightEffect : public GUIEffect{

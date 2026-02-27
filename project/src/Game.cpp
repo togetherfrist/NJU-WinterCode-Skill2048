@@ -60,7 +60,7 @@ void Game::start(){
 }
 
 void Game::move(int dr, int dc){
-    GUI::updateEffects();
+    GUIEffect::updateEffects();
     int h = board.size();
     int w = board[0].size();
     int r0 = 0, c0 = 0;
@@ -201,7 +201,7 @@ void Game::setGrid(int r, int c, int number, bool hasNumber, bool used){
 }
 
 void Game::updateGUIBoard(){
-    GUI::updateEffects();
+    GUIEffect::updateEffects();
     GUI::setBoard(board.size(), board[0].size());
     for(int r = 0; r < board.size(); r++){
         for(int c = 0; c < board[0].size(); c++){

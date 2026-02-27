@@ -32,7 +32,6 @@ struct GUI::grid{
     }
 };
 std::vector<std::vector<GUI::grid>> GUI::board;
-std::vector<std::shared_ptr<GUIEffect>> GUI::effects;
 sf::Music GUI::bgm;
 
 void GUI::openGUI(){
@@ -143,7 +142,7 @@ void GUI::openGUI(){
         window.draw(bg_sprite);
         VolumeBar::draw(window);
         drawBoard(window);
-        drawEffects(window);
+        GUIEffect::draw(window);
         GUIDataDisplay::displayDatas(window);
         Leaderboard::draw(window);
         Skill::draw(window);
@@ -306,37 +305,6 @@ void GUI::drawBoard(sf::RenderWindow &window){
     }
 }
 
-void GUI::drawEffects(sf::RenderWindow &window){
-    int lineVertexNum = 0;
-    int triangleVertexNum = 0;
-    for(auto &effect : effects){
-        lineVertexNum += effect->lineVertexNum;
-        triangleVertexNum += effect->triangleVertexNum;
-    }
-    sf::VertexArray line(sf::PrimitiveType::Lines, lineVertexNum);
-    sf::Vertex* lineDraw = &line[0];
-    sf::VertexArray triangle(sf::PrimitiveType::Triangles, triangleVertexNum);
-    sf::Vertex* triangleDraw = &triangle[0];
-    for(auto &effect : effects){
-        effect->drawTo(lineDraw, triangleDraw);
-    }
-    window.draw(triangle);
-    window.draw(line);
-    for(auto &effect : effects){
-        effect->drawToWindow(window);
-    }
-    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
-    for(int i = 0; i < effects.size(); i++){
-        auto &effect = effects[i];
-        if(effect->shouldRemain()){
-            remainingEffects.push_back(effect);
-        }else{
-            effect->onEnd();
-        }
-    }
-    effects = remainingEffects;
-}
-
 std::pair<int,int> GUI::getSelectedGrid(sf::RenderWindow & window){
     float gridWidth = getGridWidth();
     float edgeWidth = getGridEdgeWidth();
@@ -395,7 +363,7 @@ std::string GUI::getBitString(int n){
 }
 
 void GUI::generateNumber(int row, int col, int number){
-    effects.push_back(std::make_shared<putNumberEffect>(row, col, number));
+    GUIEffect::addEffect(std::make_shared<putNumberEffect>(row, col, number));
 }
 
 void GUI::putNumberWithEffect(int row, int col, int number){
@@ -405,7 +373,7 @@ void GUI::putNumberWithEffect(int row, int col, int number){
     float outer_w = grid_w + line_w;
     float outer_h = outer_w;
     auto [outerXLeft, outerYUp] = getGridTopLeft(row, col);
-    effects.push_back(std::make_shared<LightEffect>(outerXLeft + outer_w / 2, outerYUp + outer_h / 2, outer_w / 2));
+    GUIEffect::addEffect(std::make_shared<LightEffect>(outerXLeft + outer_w / 2, outerYUp + outer_h / 2, outer_w / 2));
 }
 
 void GUI::putNumber(int row, int col, int number){
@@ -414,27 +382,11 @@ void GUI::putNumber(int row, int col, int number){
     board[row][col].content = getBitString(number);
 }
 
-void GUI::addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd){
-    board[r][c] = grid();
-    effects.push_back(std::make_shared<MoveEffect>(r, c, r_to, c_to, number, endNumber, onEnd));
-}
-
 void GUI::move(int r, int c, int r_to, int c_to, int number, int endNumber){
-    addMoveEffect(r, c, r_to, c_to, number, endNumber, [r_to, c_to, endNumber](){
+    board[r][c] = grid();
+    GUIEffect::addEffect(std::make_shared<MoveEffect>(r, c, r_to, c_to, number, endNumber, [r_to, c_to, endNumber](){
         putNumber(r_to, c_to, endNumber);
-    });
-}
-
-void GUI::updateEffects(){
-    std::vector<std::shared_ptr<GUIEffect>> remainingEffects;
-    for(auto effect : effects){
-        if(effect->endOnUpdate()){
-            effect->onEnd();
-        }else{
-            remainingEffects.push_back(effect);
-        }
-    }
-    effects = remainingEffects;
+    }));
 }
 
 void GUI::endGame(){
@@ -442,10 +394,6 @@ void GUI::endGame(){
     gameDuration = getTime() - gameStartTime;
     gameMaxTile = Game::getMaxTile();
     Leaderboard::update(Game::getScore(), gameDuration);
-}
-
-void GUI::addExplosionEffect(int r, int c){
-    effects.push_back(std::make_shared<explosionEffect>(r, c));
 }
 
 void GUI::setVolume(float volume){
@@ -501,9 +449,4 @@ void VolumeBar::mouseMove(float x, float y){
 void VolumeBar::mouseReleased(){
     controllingVolume = false;
 }
-
-
-
-
-
 
