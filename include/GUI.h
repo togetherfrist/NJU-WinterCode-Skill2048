@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #pragma once
 
@@ -18,8 +19,9 @@ private:
     static constexpr float GridsToLeft = 600;
     static constexpr float GridsToTop = 300;
     static constexpr float GridsToBottom = 200;
-    static void drawBoard(sf::RenderWindow &window);
     static std::vector<std::shared_ptr<GUIEffect>> effects;
+    static sf::Music bgm;
+    static void drawBoard(sf::RenderWindow &window);
     static void drawEffects(sf::RenderWindow &window);
     static std::pair<int,int> getSelectedGrid(sf::RenderWindow &window);
     static void drawSelecting(sf::RenderWindow &window);
@@ -55,4 +57,22 @@ public:
     static void addMoveEffect(int r, int c, int r_to, int c_to, int number, int endNumber, std::function<void()> onEnd);
     static void endGame();
     static void addExplosionEffect(int r, int c);
+    static void setVolume(float volume);
+};
+
+class VolumeBar{   
+private: 
+    static constexpr float MaxBGMVolume = 30.0f;
+    static constexpr float VolumeBarX = 1700, VolumeBarY = 960, VolumeBarW = 150, VolumeBarH = 28;
+    static bool controllingVolume;
+    static bool contains(float x, float y);
+    static sf::Text text;
+public:
+    static float bgmVolume;
+    static void init();
+    static void draw(sf::RenderWindow &window);
+    static void mousePressed(float x, float y);
+    static void mouseMove(float x, float y);
+    static void mouseReleased();
+
 };

@@ -14,6 +14,7 @@ Skill::Skill(float x, float y, int availableTimes, std::string path, std::wstrin
     this->text.setPosition({x+w+5, y-5});
 }
 
+std::vector<std::pair<int, int>> Skill::selectedGrids;
 std::vector<Skill> Skill::skills;
 int Skill::usedSkillIndex = -1;
 
@@ -47,8 +48,7 @@ void Skill::init(){
             constexpr int dr[5] = {0, 1, 0, -1, 0};
             constexpr int dc[5] = {0, 0, 1, 0, -1};
             for(int k = 0; k < 5; k++){
-                int r1 = r + dr[k];
-                int c1 = c + dc[k];
+                int r1 = r + dr[k], c1 = c + dc[k];
                 if(Game::isUsed(r1, c1)){
                     return true;
                 }
@@ -59,21 +59,45 @@ void Skill::init(){
             constexpr int dr[5] = {0, 1, 0, -1, 0};
             constexpr int dc[5] = {0, 0, 1, 0, -1};
             for(int k = 0; k < 5; k++){
-                int r1 = r + dr[k];
-                int c1 = c + dc[k];
+                int r1 = r + dr[k], c1 = c + dc[k];
                 if(Game::isUsed(r1, c1)){
                     Game::setGrid(r1, c1, 0, false, true);
                 }
             }
             Game::updateGUIBoard();
             for(int k = 0; k < 5; k++){
-                int r1 = r + dr[k];
-                int c1 = c + dc[k];
+                int r1 = r + dr[k], c1 = c + dc[k];
                 if(Game::isUsed(r1, c1)){
                     GUI::addExplosionEffect(r1, c1);
                 }
             }
             reduceSkillTimes();
+        }),
+        Skill(1400, 700, 2, "./resources/images/swap.jpg", L"换位\n选择两个格子，将其交换位置", [](){
+            GUI::selectingGrid = true;
+        }, [](int r, int c){
+            return Game::isUsed(r, c);
+        }, [](int r, int c){
+            if(selectedGrids.empty()){
+                selectedGrids.push_back({r, c});
+            }else{
+                auto [r1, c1] = selectedGrids[0];
+                bool hasNumber = Game::getHasNumber(r, c);
+                int number = hasNumber ? Game::getNumber(r, c) : 0;
+                bool hasNumber1 = Game::getHasNumber(r1, c1);
+                int number1 = hasNumber1 ? Game::getNumber(r1, c1) : 0;
+                if(hasNumber){
+                    GUI::move(r, c, r1, c1, number, number);
+                }
+                if(hasNumber1){
+                    GUI::move(r1, c1, r, c, number1, number1);
+                }
+                Game::setGrid(r, c, number1, hasNumber1, true);
+                Game::setGrid(r1, c1, number, hasNumber, true);
+                GUI::selectingGrid = false;
+                selectedGrids.clear();
+                reduceSkillTimes();
+            }
         })
     });
     for(auto &skill: skills){
@@ -95,6 +119,8 @@ void Skill::reduceSkillTimes(){
 }
 
 void Skill::reset(){
+    GUI::selectingGrid = false;
+    selectedGrids.clear();
     for(auto &skill: skills){
         skill.remainingTimes = skill.availableTimes;
         updateSkillText(skill);
@@ -132,4 +158,11 @@ void Skill::selectGrid(int r, int c){
     if(skill.canSelect(r, c)){
         skill.onSelectGrid(r, c);
     }
+}
+
+bool Skill::checkGameEnd(){
+    for(auto &skill: skills){
+        if(skill.remainingTimes > 0) return false;
+    }
+    return true;
 }

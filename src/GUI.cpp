@@ -16,7 +16,7 @@ long long GUI::gameDuration = 0;
 int GUI::gameMaxTile = 0;
 bool GUI::selectingGrid = false;
 GUI::GUIState GUI::state = menu;
-sf::Font GUI::font;
+sf::Font GUI::font("./resources/fonts/SourceHanSansHWSC-VF.otf");
 sf::Clock GUI::clock;
 struct GUI::grid{
     int number;
@@ -31,6 +31,126 @@ struct GUI::grid{
     }
 };
 std::vector<std::vector<GUI::grid>> GUI::board;
+std::vector<std::shared_ptr<GUIEffect>> GUI::effects;
+sf::Music GUI::bgm;
+
+void GUI::openGUI(){
+    GUI::state = menu;
+
+    sf::RenderWindow window(sf::VideoMode({window_w, window_h}), "Super 2048");
+    window.setKeyRepeatEnabled(false);
+
+    const sf::Texture bg_texture("./resources/images/bg_1920x1080.png");
+    sf::Sprite bg_sprite(bg_texture);
+
+    if(!bgm.openFromFile("./resources/music/bgm2048.mp3")){
+        std::cout << "Error while loading bgm\n";
+    }
+    bgm.setVolume(VolumeBar::bgmVolume);
+    bgm.setLooping(true);
+    bgm.play();
+
+    constexpr float button_w = 400;
+    constexpr float button_h = 120;
+    sf::Color buttonColor = sf::Color::White;
+    sf::Color hoverColor = sf::Color(200, 255, 200);
+    Rectangle::addButton(menu, window_w/2-button_w/2, window_h/2-button_h/2, button_w, button_h, L"开始游戏", buttonColor, hoverColor, [](){
+        Game::start();
+    });
+    Rectangle::addRectangle(end, 0, 0, window_w, window_h, L"", sf::Color(0,0,0,50));
+    Rectangle::addButton(end, 400, 900, button_w, button_h, L"返回菜单", buttonColor, hoverColor, [](){
+        state = menu;
+    });
+    Rectangle::addButton(end, 1120, 900, button_w, button_h, L"重新开始", buttonColor, hoverColor, [](){
+        Game::start();
+    });
+    GUIDataDisplay::init();
+    Leaderboard::load();
+    Skill::init();
+    VolumeBar::init();
+
+    const auto onClose = [&window](const sf::Event::Closed&){
+        window.close();
+    };
+
+    const auto onKeyPressed = [&window](const sf::Event::KeyPressed &keyPressed){
+        if(state == ingame){
+            switch(keyPressed.scancode){
+                case sf::Keyboard::Scancode::W :
+                case sf::Keyboard::Scancode::Up :
+                    Game::move(-1, 0);
+                    break;
+                case sf::Keyboard::Scancode::S :
+                case sf::Keyboard::Scancode::Down :
+                    Game::move(1, 0);
+                    break;
+                case sf::Keyboard::Scancode::A :
+                case sf::Keyboard::Scancode::Left :
+                    Game::move(0, -1);
+                    break;
+                case sf::Keyboard::Scancode::D :
+                case sf::Keyboard::Scancode::Right :
+                    Game::move(0, 1);
+                    break;
+                case sf::Keyboard::Scancode::R :
+                    Game::start();
+                    break;
+                case sf::Keyboard::Scancode::Q :
+                    state = menu;
+                    break;
+            }
+        }else if(state == end){
+            switch(keyPressed.scancode){
+                case sf::Keyboard::Scancode::R:
+                    Game::start();
+                    break;
+                case sf::Keyboard::Scancode::Q :
+                    state = menu;
+                    break;
+            }
+        }
+    };
+
+    const auto onMouseButtonPressed = [&window](const sf::Event::MouseButtonPressed mousePressed){
+        if(mousePressed.button == sf::Mouse::Button::Left){
+            if(selectingGrid){
+                auto [r, c] = getSelectedGrid(window);
+                Skill::selectGrid(r, c);
+            }else{
+                auto [x, y] = getMousePosition(window);
+                Rectangle::click(x, y);
+                Skill::click(x, y);
+                VolumeBar::mousePressed(x, y);
+            }
+        }
+    };
+
+    const auto onMouseMove = [&window](const sf::Event::MouseMoved mouseMove){
+        auto [x, y] = getMousePosition(window);
+        VolumeBar::mouseMove(x, y);
+    };
+
+    const auto onMouseButtonReleased = [&window](const sf::Event::MouseButtonReleased mouseReleased){
+        if(mouseReleased.button == sf::Mouse::Button::Left){
+            VolumeBar::mouseReleased();
+        }
+    };
+
+    while(window.isOpen()){
+        window.handleEvents(onClose, onKeyPressed, onMouseButtonPressed, onMouseMove, onMouseButtonReleased);
+        window.clear();
+        window.draw(bg_sprite);
+        VolumeBar::draw(window);
+        drawBoard(window);
+        drawEffects(window);
+        GUIDataDisplay::displayDatas(window);
+        Leaderboard::draw(window);
+        Skill::draw(window);
+        Rectangle::draw(window);
+        drawSelecting(window);
+        window.display();
+    }
+}
 
 void GUI::fixTextOrigin(sf::Text &text){
     sf::FloatRect textbounds = text.getLocalBounds();
@@ -185,7 +305,6 @@ void GUI::drawBoard(sf::RenderWindow &window){
     }
 }
 
-std::vector<std::shared_ptr<GUIEffect>> GUI::effects;
 void GUI::drawEffects(sf::RenderWindow &window){
     int lineVertexNum = 0;
     int triangleVertexNum = 0;
@@ -241,112 +360,6 @@ void GUI::drawSelecting(sf::RenderWindow &window){
     drawRectangleInterior(recDraw, x+edgeWidth, x+gridWidth+edgeWidth, y+gridWidth, y+gridWidth+edgeWidth, selectingColor);
     drawRectangleInterior(recDraw, x, x+edgeWidth, y+edgeWidth, y+gridWidth+edgeWidth, selectingColor);
     window.draw(rectangles);
-}
-
-void GUI::openGUI(){
-    GUI::state = menu;
-
-    sf::RenderWindow window(sf::VideoMode({window_w, window_h}), "Super 2048");
-    window.setKeyRepeatEnabled(false);
-
-    const sf::Texture bg_texture("./resources/images/bg_1920x1080.png");
-    sf::Sprite bg_sprite(bg_texture);
-
-    if(!font.openFromFile("./resources/fonts/SourceHanSansHWSC-VF.otf")){
-        std::cout << "Error while loading font\n";
-    }
-
-    sf::Music music("./resources/music/04_Nobiri.mp3");
-    music.setVolume(3.0f);
-    music.setLooping(true);
-    music.play();
-
-    constexpr float button_w = 400;
-    constexpr float button_h = 120;
-    sf::Color buttonColor = sf::Color::White;
-    sf::Color hoverColor = sf::Color(200, 255, 200);
-    Rectangle::addButton(menu, window_w/2-button_w/2, window_h/2, button_w, button_h, L"开始游戏", buttonColor, hoverColor, [](){
-        Game::start();
-    });
-    Rectangle::addRectangle(end, 0, 0, window_w, window_h, L"", sf::Color(0,0,0,50));
-    Rectangle::addButton(end, 400, 900, button_w, button_h, L"返回菜单", buttonColor, hoverColor, [](){
-        state = menu;
-    });
-    Rectangle::addButton(end, 1120, 900, button_w, button_h, L"重新开始", buttonColor, hoverColor, [](){
-        Game::start();
-    });
-    GUIDataDisplay::init();
-    Leaderboard::load();
-    Skill::init();
-
-    const auto onClose = [&window](const sf::Event::Closed&){
-        window.close();
-    };
-
-    const auto onKeyPressed = [&window](const sf::Event::KeyPressed &keyPressed){
-        if(state == ingame){
-            switch(keyPressed.scancode){
-                case sf::Keyboard::Scancode::W :
-                case sf::Keyboard::Scancode::Up :
-                    Game::move(-1, 0);
-                    break;
-                case sf::Keyboard::Scancode::S :
-                case sf::Keyboard::Scancode::Down :
-                    Game::move(1, 0);
-                    break;
-                case sf::Keyboard::Scancode::A :
-                case sf::Keyboard::Scancode::Left :
-                    Game::move(0, -1);
-                    break;
-                case sf::Keyboard::Scancode::D :
-                case sf::Keyboard::Scancode::Right :
-                    Game::move(0, 1);
-                    break;
-                case sf::Keyboard::Scancode::R :
-                    Game::start();
-                    break;
-                case sf::Keyboard::Scancode::Q :
-                    state = menu;
-                    break;
-            }
-        }else if(state == end){
-            switch(keyPressed.scancode){
-                case sf::Keyboard::Scancode::R:
-                    Game::start();
-                    break;
-                case sf::Keyboard::Scancode::Q :
-                    state = menu;
-                    break;
-            }
-        }
-    };
-
-    const auto onMouseButtonPressed = [&window](const sf::Event::MouseButtonPressed mousePressed){
-        if(mousePressed.button == sf::Mouse::Button::Left){
-            if(selectingGrid){
-                auto [r, c] = getSelectedGrid(window);
-                Skill::selectGrid(r, c);
-            }else{
-                auto [x, y] = getMousePosition(window);
-                Rectangle::click(x, y);
-                Skill::click(x, y);
-            }
-        }
-    };
-
-    while(window.isOpen()){
-        window.handleEvents(onClose, onKeyPressed, onMouseButtonPressed);
-        window.clear();
-        window.draw(bg_sprite);
-        drawBoard(window);
-        drawEffects(window);
-        GUIDataDisplay::displayDatas(window);
-        Leaderboard::draw(window);
-        Skill::draw(window);
-        Rectangle::draw(window);
-        drawSelecting(window);
-        window.display();
-    }
 }
 
 void GUI::setBoard(int h, int w){
@@ -433,4 +446,63 @@ void GUI::endGame(){
 void GUI::addExplosionEffect(int r, int c){
     effects.push_back(std::make_shared<explosionEffect>(r, c));
 }
+
+void GUI::setVolume(float volume){
+    bgm.setVolume(volume);
+}
+
+float VolumeBar::bgmVolume = 10.0f;
+bool VolumeBar::controllingVolume = false;
+sf::Text VolumeBar::text(GUI::font);
+
+bool VolumeBar::contains(float x, float y){
+    return VolumeBarX <= x && x <= VolumeBarX + VolumeBarW && VolumeBarY <= y && y <= VolumeBarY + VolumeBarH;
+}
+
+void VolumeBar::init(){
+    text.setString(L"背景音乐音量");
+    text.setCharacterSize(24);
+    text.setFillColor(sf::Color::Black);
+    text.setPosition({VolumeBarX, VolumeBarY+VolumeBarH+5});
+}
+
+void VolumeBar::draw(sf::RenderWindow &window){
+    sf::VertexArray triangle(sf::PrimitiveType::Triangles, 2*6);
+    auto triangleDraw = &triangle[0];
+    sf::VertexArray line(sf::PrimitiveType::Lines, 8);
+    auto lineDraw = &line[0];
+    float len = bgmVolume / MaxBGMVolume * VolumeBarW;
+    sf::Color volumeColor = sf::Color(150, 255, 150);
+    sf::Color emptyColor = sf::Color(200, 200, 200);
+    sf::Color edgeColor = sf::Color(0, 0, 0);
+    GUI::drawRectangleInterior(triangleDraw, VolumeBarX, VolumeBarX+len, VolumeBarY, VolumeBarY+VolumeBarH, volumeColor);
+    GUI::drawRectangleInterior(triangleDraw, VolumeBarX+len, VolumeBarX+VolumeBarW, VolumeBarY, VolumeBarY+VolumeBarH, emptyColor);
+    GUI::drawRectangleEdges(lineDraw, VolumeBarX, VolumeBarX+VolumeBarW, VolumeBarY, VolumeBarY+VolumeBarH, edgeColor);
+    window.draw(triangle);
+    window.draw(line);
+    window.draw(text);
+}
+
+void VolumeBar::mousePressed(float x, float y){
+    if(contains(x, y)){
+        controllingVolume = true;
+        mouseMove(x, y);
+    }
+}
+
+void VolumeBar::mouseMove(float x, float y){
+    if(!controllingVolume) return;
+    float len = std::min(std::max(x - VolumeBarX, 0.0f), VolumeBarW);
+    bgmVolume = MaxBGMVolume * len / VolumeBarW;
+    GUI::setVolume(bgmVolume);
+}
+
+void VolumeBar::mouseReleased(){
+    controllingVolume = false;
+}
+
+
+
+
+
 

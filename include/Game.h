@@ -20,4 +20,6 @@ public:
     static void addGrid(int r, int c);
     static void setGrid(int r, int c, int number, bool hasNumber, bool used);
     static void updateGUIBoard();
+    static bool getHasNumber(int r, int c);
+    static int getNumber(int r, int c);
 };

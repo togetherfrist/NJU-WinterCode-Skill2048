@@ -151,6 +151,7 @@ void Game::checkEnd(){
             }
         }
     }
+    if(!Skill::checkGameEnd()) return;
     GUI::endGame();
 }
 
@@ -209,5 +210,15 @@ void Game::updateGUIBoard(){
         }
     }
 }
+
+bool Game::getHasNumber(int r, int c){
+    return board[r][c].hasNumber;
+}
+
+int Game::getNumber(int r, int c){
+    return board[r][c].number;
+}
+
+
 
 

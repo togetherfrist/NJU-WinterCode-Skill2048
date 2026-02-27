@@ -22,6 +22,7 @@ private:
     std::function<void()> onclick;
     std::function<bool(int r, int c)> canSelect;
     std::function<void(int r, int c)> onSelectGrid;
+    static std::vector<std::pair<int, int>> selectedGrids;
     static std::vector<Skill> skills;
     static int usedSkillIndex;
     static void updateSkillText(Skill &skill);
@@ -35,4 +36,5 @@ public:
     static void click(float x, float y);
     static sf::Color getSelectingColor(int r, int c);
     static void selectGrid(int r, int c);
+    static bool checkGameEnd();
 };
